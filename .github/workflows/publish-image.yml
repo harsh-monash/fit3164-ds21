@@ -56,10 +56,12 @@ jobs:
         context: .
         file: ./Dockerfile
         push: true
+        platforms: linux/amd64,linux/arm64
         tags: |
           ghcr.io/${{ github.repository_owner }}/fit3164-dashboard:latest
           ghcr.io/${{ github.repository_owner }}/fit3164-dashboard:${{ github.sha }}
 
     - name: Image info
       run: |
-        echo "Image published to ghcr.io/${{ github.repository_owner }}/fit3164-dashboard:latest"
+        echo "Multi-platform image published to ghcr.io/${{ github.repository_owner }}/fit3164-dashboard:latest"
+        echo "Supported platforms: linux/amd64 (Intel/AMD), linux/arm64 (Apple Silicon/M1/M2/M3)"
