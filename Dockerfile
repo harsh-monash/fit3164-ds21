@@ -18,7 +18,7 @@ COPY requirements.txt /app/requirements.txt
 RUN pip install --no-cache-dir -r /app/requirements.txt
 
 # Copy application code
-COPY src /app/src
+COPY app /app/app
 COPY frontend /app/frontend
 COPY config /app/config
 COPY start_server.py /app/start_server.py
@@ -26,4 +26,4 @@ COPY start_server.py /app/start_server.py
 EXPOSE 8000
 
 # Default command (use environment variables from config/.env via start_server if desired)
-CMD ["python", "-m", "uvicorn", "src.api.main:app", "--host", "0.0.0.0", "--port", "8000"]
+CMD ["python", "-m", "uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]

@@ -1,0 +1,82 @@
+# Git
+.git
+.gitignore
+.github
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+*.pyc
+.pytest_cache/
+.coverage
+htmlcov/
+.tox/
+.hypothesis/
+
+# Virtual environments
+venv/
+env/
+ENV/
+env.bak/
+venv.bak/
+
+# IDEs
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Project specific
+testing/
+logs/
+temp/
+dummy/
+docs/
+weather_data/
+data/
+scan_reports/
+node_modules/
+scripts/
+tools/
+sample_weather_data.json
+check.py
+check_licenses.py
+init_db.py
+database_docker.txt
+agent.md
+COPILOT_INSTRUCTION.md
+Frontend_Backend_Architecture_Report.md
+README.md
+README_Project_Structure.md
+
+# Docker
+docker-compose.yml
+docker-compose.app.yml
+Dockerfile
+.dockerignore
+
+# Backup files
+*.backup
+*.bak
+*.old
