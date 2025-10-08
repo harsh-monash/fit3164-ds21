@@ -490,10 +490,79 @@
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script src="https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js"></script>
     
-    <script src="/static/js/dashboard.js?v=2.0"></script>
     <script src="/static/js/map.js?v=1.1"></script>
     <script>
-        // Initialize search logic from dashboard.js when the page loads
+        // ===================================================
+        // Search Functionality - Extracted from dashboard.js
+        // ===================================================
+        
+        // Perform location search using Nominatim API
+        async function performLocationSearch(query) {
+            const searchResults = document.getElementById('topPlaceSearchResults');
+            
+            try {
+                // Use Nominatim API for OpenStreetMap geocoding
+                const response = await fetch(
+                    `https://nominatim.openstreetmap.org/search?format=json&limit=5&q=${encodeURIComponent(query)}&countrycodes=au`
+                );
+                
+                if (!response.ok) {
+                    throw new Error('Search failed');
+                }
+                
+                const results = await response.json();
+                
+                // Check if no results found
+                if (!results || results.length === 0) {
+                    searchResults.innerHTML = '<div class="list-group-item">No locations found. Try a different search term.</div>';
+                    return;
+                }
+                
+                // Display results
+                searchResults.innerHTML = results.map(result => `
+                    <button class="list-group-item list-group-item-action" data-lat="${result.lat}" data-lon="${result.lon}" data-name="${result.display_name}">
+                        <div class="d-flex flex-column">
+                            <div class="fw-bold mb-1">${result.name || result.display_name.split(',')[0]}</div>
+                            <small class="text-muted">${result.display_name}</small>
+                        </div>
+                    </button>
+                `).join('');
+                
+                // Add click handlers to result items
+                searchResults.querySelectorAll('.list-group-item').forEach(item => {
+                    item.addEventListener('click', () => {
+                        const lat = parseFloat(item.dataset.lat);
+                        const lon = parseFloat(item.dataset.lon);
+                        const name = item.dataset.name;
+                        
+                        // Update selected location name
+                        const selectedLocationName = document.getElementById('selectedLocationName');
+                        if (selectedLocationName) {
+                            selectedLocationName.textContent = name;
+                        }
+                        
+                        // Pan map to location if map.js is loaded
+                        if (typeof window.mapFunctions !== 'undefined' && window.mapFunctions.panToLocation) {
+                            window.mapFunctions.panToLocation(lat, lon, 10);
+                            
+                            // Scroll to map section
+                            const mapSection = document.querySelector('.map-section');
+                            if (mapSection) {
+                                mapSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                            }
+                        }
+                    });
+                });
+                
+            } catch (error) {
+                console.error('Search error:', error);
+                searchResults.innerHTML = '<div class="list-group-item text-danger">Search failed. Please try again.</div>';
+            }
+        }
+        
+        // ===================================================
+        // Initialize search logic when the page loads
+        // ===================================================
         document.addEventListener('DOMContentLoaded', function() {
             const searchInput = document.getElementById('topPlaceSearchInput');
             const searchButton = document.getElementById('searchButton');
@@ -503,7 +572,7 @@
             // Function to trigger search
             function triggerSearch() {
                 const query = searchInput.value.trim();
-                if (query && typeof performLocationSearch === 'function') {
+                if (query) {
                     // Show results container
                     const resultsContainer = document.getElementById('searchResultsContainer');
                     if (resultsContainer) {
@@ -632,15 +701,6 @@
                     // Focus back on search input for new search
                     searchInput.focus();
                 });
-            }
-            
-            // Initialize search from dashboard.js if available
-            if (typeof initializeSearch === 'function') {
-                try { 
-                    initializeSearch(); 
-                } catch (e) { 
-                    console.error('Failed to initialize search:', e); 
-                }
             }
         });
     </script>
