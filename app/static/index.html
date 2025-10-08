@@ -7,7 +7,14 @@
 
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Leaflet CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.css" />
+    <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.Default.css" />
+    
     <link rel="stylesheet" href="/static/css/weather_visualization.css?v=3.0">
+    <link rel="stylesheet" href="/static/css/map.css?v=1.1">
     <style>
         /* Dark theme hero section */
         body, html { 
@@ -358,6 +365,85 @@
             </div>
         </div>
 
+        <!-- Interactive Map Section -->
+        <section class="map-section">
+            <div class="map-header">
+                <h2 class="map-title">
+                    <i class="fas fa-map-marked-alt"></i>
+                    Explore Weather Stations Across Australia
+                </h2>
+                <p class="map-subtitle">
+                    Click any marker to view real-time weather data from 518+ BOM stations
+                </p>
+            </div>
+
+            <!-- Map Container -->
+            <div class="map-container">
+                <div id="stationMap"></div>
+                
+                <!-- Map Loading State -->
+                <div id="mapLoading" class="map-loading">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="visually-hidden">Loading map...</span>
+                    </div>
+                    <p>Loading weather stations...</p>
+                </div>
+                
+                <!-- Map Controls -->
+                <div class="map-controls">
+                    <button id="locateBtn" class="map-btn" title="Find stations near me">
+                        <i class="fas fa-location-arrow"></i>
+                    </button>
+                    <button id="resetViewBtn" class="map-btn" title="Reset map view">
+                        <i class="fas fa-home"></i>
+                    </button>
+                </div>
+                
+                <!-- Map Legend -->
+                <div class="map-legend">
+                    <div class="legend-title">Temperature</div>
+                    <div class="legend-items">
+                        <div class="legend-item">
+                            <span class="legend-color" style="background: #3b82f6;"></span>
+                            <span>Cold (&lt; 15°C)</span>
+                        </div>
+                        <div class="legend-item">
+                            <span class="legend-color" style="background: #10b981;"></span>
+                            <span>Mild (15-25°C)</span>
+                        </div>
+                        <div class="legend-item">
+                            <span class="legend-color" style="background: #f59e0b;"></span>
+                            <span>Warm (25-35°C)</span>
+                        </div>
+                        <div class="legend-item">
+                            <span class="legend-color" style="background: #ef4444;"></span>
+                            <span>Hot (&gt; 35°C)</span>
+                        </div>
+                        <div class="legend-item">
+                            <span class="legend-color" style="background: #6b7280;"></span>
+                            <span>No data</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Map Stats -->
+            <div class="map-stats">
+                <div class="stat-item">
+                    <div class="stat-value" id="totalStations">518</div>
+                    <div class="stat-label">Total Stations</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value" id="activeStations">-</div>
+                    <div class="stat-label">Active Stations</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value" id="visibleStations">-</div>
+                    <div class="stat-label">Visible on Map</div>
+                </div>
+            </div>
+        </section>
+
         <!-- Features Section -->
         <!-- <div class="features-section">
             <div class="feature-card">
@@ -399,7 +485,13 @@
     </main>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="/static/js/dashboard.js"></script>
+    
+    <!-- Leaflet JS -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js"></script>
+    
+    <script src="/static/js/dashboard.js?v=2.0"></script>
+    <script src="/static/js/map.js?v=1.1"></script>
     <script>
         // Initialize search logic from dashboard.js when the page loads
         document.addEventListener('DOMContentLoaded', function() {

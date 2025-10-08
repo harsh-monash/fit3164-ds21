@@ -1,0 +1,463 @@
+/* ================================================
+   Weather Station Map Styles - Dark Theme
+   ================================================ */
+
+/* Map Section */
+.map-section {
+    max-width: 1600px;
+    margin: 60px auto 40px;
+    padding: 0 2rem;
+}
+
+.map-header {
+    text-align: center;
+    margin-bottom: 2rem;
+}
+
+.map-title {
+    font-size: 2rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin-bottom: 0.5rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 1rem;
+}
+
+.map-title i {
+    color: var(--primary-blue);
+    font-size: 1.75rem;
+}
+
+.map-subtitle {
+    color: var(--text-secondary);
+    font-size: 1rem;
+    margin: 0;
+}
+
+/* Map Container */
+.map-container {
+    position: relative;
+    background: var(--card-bg);
+    border: 1px solid var(--card-border);
+    border-radius: 16px;
+    overflow: hidden;
+    height: 600px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+}
+
+#stationMap {
+    width: 100%;
+    height: 100%;
+    z-index: 1;
+}
+
+/* Map Loading State */
+.map-loading {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: var(--card-bg);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 1rem;
+    z-index: 1000;
+}
+
+.map-loading.hidden {
+    display: none;
+}
+
+.map-loading p {
+    color: var(--text-secondary);
+    margin: 0;
+}
+
+/* Map Controls */
+.map-controls {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    z-index: 1000;
+}
+
+.map-btn {
+    background: var(--card-bg);
+    border: 1px solid var(--card-border);
+    border-radius: 8px;
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--text-primary);
+    cursor: pointer;
+    transition: all 0.3s;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+}
+
+.map-btn:hover {
+    background: var(--primary-blue);
+    border-color: var(--primary-blue);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 212, 255, 0.3);
+}
+
+.map-btn:active {
+    transform: translateY(0);
+}
+
+.map-btn i {
+    font-size: 1rem;
+}
+
+/* Map Legend */
+.map-legend {
+    position: absolute;
+    bottom: 20px;
+    left: 20px;
+    background: rgba(26, 35, 50, 0.95);
+    border: 1px solid var(--card-border);
+    border-radius: 12px;
+    padding: 1rem;
+    backdrop-filter: blur(10px);
+    z-index: 1000;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+}
+
+.legend-title {
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-bottom: 0.75rem;
+    font-size: 0.875rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.legend-items {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.legend-item {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.875rem;
+    color: var(--text-secondary);
+}
+
+.legend-color {
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    border: 2px solid rgba(255, 255, 255, 0.2);
+}
+
+/* Temperature color classes */
+.legend-color.cold { background: #3b82f6; }
+.legend-color.mild { background: #10b981; }
+.legend-color.warm { background: #f59e0b; }
+.legend-color.hot { background: #ef4444; }
+.legend-color.no-data { background: #6b7280; }
+
+/* Map Stats */
+.map-stats {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1rem;
+    margin-top: 2rem;
+}
+
+.stat-item {
+    background: var(--card-bg);
+    border: 1px solid var(--card-border);
+    border-radius: 12px;
+    padding: 1.5rem;
+    text-align: center;
+    transition: all 0.3s;
+}
+
+.stat-item:hover {
+    border-color: var(--primary-blue);
+    transform: translateY(-2px);
+}
+
+.stat-value {
+    font-size: 2rem;
+    font-weight: 700;
+    color: var(--primary-blue);
+    margin-bottom: 0.5rem;
+}
+
+.stat-label {
+    color: var(--text-secondary);
+    font-size: 0.875rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+/* ================================================
+   Leaflet Custom Styles - Dark Theme Override
+   ================================================ */
+
+/* Leaflet Popup Dark Theme */
+.leaflet-popup-content-wrapper {
+    background: var(--card-bg) !important;
+    color: var(--text-primary) !important;
+    border: 1px solid var(--card-border) !important;
+    border-radius: 12px !important;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5) !important;
+}
+
+.leaflet-popup-tip {
+    background: var(--card-bg) !important;
+    border: 1px solid var(--card-border) !important;
+}
+
+.leaflet-popup-content {
+    margin: 1rem !important;
+    min-width: 250px !important;
+}
+
+/* Station Popup Content */
+.station-popup {
+    color: var(--text-primary);
+}
+
+.station-popup-header {
+    font-size: 1.125rem;
+    font-weight: 600;
+    color: var(--primary-blue);
+    margin-bottom: 0.75rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.station-popup-header i {
+    font-size: 1rem;
+}
+
+.station-popup-info {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    margin-bottom: 1rem;
+}
+
+.station-info-row {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.875rem;
+}
+
+.station-info-row i {
+    width: 20px;
+    color: var(--primary-blue);
+    text-align: center;
+}
+
+.station-info-label {
+    color: var(--text-secondary);
+    min-width: 80px;
+}
+
+.station-info-value {
+    color: var(--text-primary);
+    font-weight: 500;
+}
+
+.station-popup-btn {
+    background: var(--primary-blue);
+    border: none;
+    border-radius: 8px;
+    padding: 0.75rem 1.5rem;
+    color: white;
+    font-weight: 600;
+    width: 100%;
+    cursor: pointer;
+    transition: all 0.3s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    text-decoration: none;
+}
+
+.station-popup-btn:hover {
+    background: var(--accent-blue);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 212, 255, 0.3);
+}
+
+.station-popup-btn i {
+    font-size: 0.875rem;
+}
+
+/* Leaflet Cluster Dark Theme */
+.marker-cluster-small,
+.marker-cluster-medium,
+.marker-cluster-large {
+    background-color: rgba(0, 212, 255, 0.3) !important;
+    border: 2px solid var(--primary-blue) !important;
+}
+
+.marker-cluster-small div,
+.marker-cluster-medium div,
+.marker-cluster-large div {
+    background-color: rgba(0, 212, 255, 0.6) !important;
+    color: white !important;
+    font-weight: 600 !important;
+}
+
+/* Leaflet Attribution Dark Theme */
+.leaflet-control-attribution {
+    background: rgba(26, 35, 50, 0.8) !important;
+    color: var(--text-secondary) !important;
+    font-size: 0.75rem !important;
+}
+
+.leaflet-control-attribution a {
+    color: var(--primary-blue) !important;
+}
+
+/* Leaflet Zoom Control Dark Theme */
+.leaflet-control-zoom {
+    border: 1px solid var(--card-border) !important;
+    border-radius: 8px !important;
+    overflow: hidden;
+}
+
+.leaflet-control-zoom a {
+    background: var(--card-bg) !important;
+    color: var(--text-primary) !important;
+    border-bottom: 1px solid var(--card-border) !important;
+    width: 36px !important;
+    height: 36px !important;
+    line-height: 36px !important;
+}
+
+.leaflet-control-zoom a:hover {
+    background: var(--primary-blue) !important;
+    color: white !important;
+}
+
+.leaflet-control-zoom a:last-child {
+    border-bottom: none !important;
+}
+
+/* Leaflet Tile Layer - Dark Mode Filter */
+/* Commented out to allow tiles to show properly */
+/* 
+.leaflet-tile-pane {
+    filter: brightness(0.6) invert(1) contrast(3) hue-rotate(200deg) saturate(0.3) brightness(0.7);
+}
+*/
+
+/* ================================================
+   Responsive Design
+   ================================================ */
+
+@media (max-width: 768px) {
+    .map-section {
+        padding: 0 1rem;
+        margin: 40px auto 30px;
+    }
+    
+    .map-title {
+        font-size: 1.5rem;
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+    
+    .map-subtitle {
+        font-size: 0.875rem;
+    }
+    
+    .map-container {
+        height: 400px;
+        border-radius: 12px;
+    }
+    
+    .map-legend {
+        bottom: 10px;
+        left: 10px;
+        padding: 0.75rem;
+    }
+    
+    .legend-title {
+        font-size: 0.75rem;
+    }
+    
+    .legend-item {
+        font-size: 0.75rem;
+    }
+    
+    .legend-color {
+        width: 12px;
+        height: 12px;
+    }
+    
+    .map-controls {
+        top: 10px;
+        right: 10px;
+    }
+    
+    .map-btn {
+        width: 36px;
+        height: 36px;
+    }
+    
+    .map-stats {
+        grid-template-columns: 1fr;
+        gap: 0.75rem;
+        margin-top: 1.5rem;
+    }
+    
+    .stat-item {
+        padding: 1rem;
+    }
+    
+    .stat-value {
+        font-size: 1.5rem;
+    }
+    
+    .leaflet-popup-content {
+        min-width: 200px !important;
+        margin: 0.75rem !important;
+    }
+    
+    .station-popup-header {
+        font-size: 1rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .map-container {
+        height: 350px;
+    }
+    
+    .map-legend {
+        font-size: 0.7rem;
+        padding: 0.5rem;
+    }
+    
+    .legend-items {
+        gap: 0.25rem;
+    }
+    
+    .map-title {
+        font-size: 1.25rem;
+    }
+}

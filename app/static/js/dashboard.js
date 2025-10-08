@@ -34,7 +34,7 @@
 // Minimal dashboard bootstrap: fetch statistics and stations and populate the page
 const API_BASE = '/api';
 let weatherMap = null;
-let markersLayer = null;
+let dashboardMarkersLayer = null; // Renamed to avoid conflict with map.js
 let heatmapLayer = null;
 let currentFilteredData = null;
 
@@ -46,7 +46,12 @@ window.addEventListener('error', function(e) {
 document.addEventListener('DOMContentLoaded', () => {
     loadStatistics();
     loadStations();
-    initializeMap();
+    
+    // Only initialize map if weatherMap element exists (dashboard.html)
+    if (document.getElementById('weatherMap')) {
+        initializeMap();
+    }
+    
     initializeSearch();
     initializeFeedback();
     initializeFiltering();
@@ -62,7 +67,7 @@ function initializeMap() {
 	}).addTo(weatherMap);
 	
 	// Create layer groups
-	markersLayer = L.layerGroup().addTo(weatherMap);
+	dashboardMarkersLayer = L.layerGroup().addTo(weatherMap);
 	
 	// Add layer control
 	const baseLayers = {
@@ -72,7 +77,7 @@ function initializeMap() {
 	};
 	
 	const overlayLayers = {
-		"Weather Stations": markersLayer
+		"Weather Stations": dashboardMarkersLayer
 	};
 	
 	L.control.layers(baseLayers, overlayLayers).addTo(weatherMap);
@@ -87,8 +92,8 @@ function initializeMap() {
 async function loadStationsOnMap() {
 	try {
 		// Clear existing markers
-		if (markersLayer) {
-			markersLayer.clearLayers();
+		if (dashboardMarkersLayer) {
+			dashboardMarkersLayer.clearLayers();
 		}
 		
 		const resp = await fetch(`${API_BASE}/bom/stations`);
@@ -108,7 +113,7 @@ async function loadStationsOnMap() {
 				`;
 				
 				marker.bindPopup(popupContent);
-				markersLayer.addLayer(marker);
+				dashboardMarkersLayer.addLayer(marker);
 			}
 		});
 	} catch (err) {
@@ -840,17 +845,29 @@ async function loadStatistics() {
         const avgTemp = data.temperature?.min_average ?? data.temperature?.max_average ?? null;
         const avgET = data.evapotranspiration?.average ?? null;
         
-        document.getElementById('totalRecords').textContent = Number(totalRecords).toLocaleString();
-        document.getElementById('totalStations').textContent = totalStations;
-        document.getElementById('avgTemp').textContent = avgTemp !== null ? `${Number(avgTemp).toFixed(1)}°C` : 'N/A';
-        document.getElementById('avgET').textContent = avgET !== null ? `${Number(avgET).toFixed(2)} mm` : 'N/A';
+        // Only update if elements exist (dashboard.html specific)
+        const totalRecordsEl = document.getElementById('totalRecords');
+        const totalStationsEl = document.getElementById('totalStations');
+        const avgTempEl = document.getElementById('avgTemp');
+        const avgETEl = document.getElementById('avgET');
+        
+        if (totalRecordsEl) totalRecordsEl.textContent = Number(totalRecords).toLocaleString();
+        if (totalStationsEl) totalStationsEl.textContent = totalStations;
+        if (avgTempEl) avgTempEl.textContent = avgTemp !== null ? `${Number(avgTemp).toFixed(1)}°C` : 'N/A';
+        if (avgETEl) avgETEl.textContent = avgET !== null ? `${Number(avgET).toFixed(2)} mm` : 'N/A';
         
     } catch (err) {
         console.error('Statistics load error', err);
-        document.getElementById('totalRecords').textContent = 'Error';
-        document.getElementById('totalStations').textContent = 'Error';
-        document.getElementById('avgTemp').textContent = 'Error';
-        document.getElementById('avgET').textContent = 'Error';
+        // Only update if elements exist
+        const totalRecordsEl = document.getElementById('totalRecords');
+        const totalStationsEl = document.getElementById('totalStations');
+        const avgTempEl = document.getElementById('avgTemp');
+        const avgETEl = document.getElementById('avgET');
+        
+        if (totalRecordsEl) totalRecordsEl.textContent = 'Error';
+        if (totalStationsEl) totalStationsEl.textContent = 'Error';
+        if (avgTempEl) avgTempEl.textContent = 'Error';
+        if (avgETEl) avgETEl.textContent = 'Error';
     }
 }
 
@@ -859,23 +876,32 @@ async function loadStations() {
 		const resp = await fetch(`${API_BASE}/bom/stations`);
 		if (!resp.ok) throw new Error('Failed to load stations');
 		const stations = await resp.json();
-		document.getElementById('stationCount').textContent = `${stations.length} stations`;
-		const grid = document.getElementById('stationsGrid');
-		grid.innerHTML = stations.map(s => {
-			const name = s.station_name ?? s.name ?? s.code ?? 'Unknown';
-			const records = s.record_count ?? 0;
-			const avgET = s.avg_evapotranspiration ?? null;
-			const avgETDisplay = (avgET !== null && avgET !== undefined) ? `${Number(avgET).toFixed(2)} mm` : 'N/A';
-			return `
-				<div class="station-card">
-					<h6>${name}</h6>
-					<div class="row">
-						<div class="col-6"><small class="text-muted">Records:</small><br><strong>${Number(records).toLocaleString()}</strong></div>
-						<div class="col-6"><small class="text-muted">Avg ET:</small><br><strong>${avgETDisplay}</strong></div>
-					</div>
+		
+		// Only update if elements exist (dashboard.html specific)
+		const stationCountEl = document.getElementById('stationCount');
+		const gridEl = document.getElementById('stationsGrid');
+		
+		if (stationCountEl) {
+			stationCountEl.textContent = `${stations.length} stations`;
+		}
+		
+		if (gridEl) {
+			gridEl.innerHTML = stations.map(s => {
+				const name = s.station_name ?? s.name ?? s.code ?? 'Unknown';
+				const records = s.record_count ?? 0;
+				const avgET = s.avg_evapotranspiration ?? null;
+				const avgETDisplay = (avgET !== null && avgET !== undefined) ? `${Number(avgET).toFixed(2)} mm` : 'N/A';
+				return `
+					<div class="station-card">
+						<h6>${name}</h6>
+						<div class="row">
+							<div class="col-6"><small class="text-muted">Records:</small><br><strong>${Number(records).toLocaleString()}</strong></div>
+							<div class="col-6"><small class="text-muted">Avg ET:</small><br><strong>${avgETDisplay}</strong></div>
+						</div>
 				</div>
 			`;
 		}).join('');
+		}
 		
 		// Initialize the collapse functionality after stations are loaded
 		setTimeout(() => {
@@ -883,7 +909,10 @@ async function loadStations() {
 		}, 100);
 	} catch (err) {
 		console.error('Stations load error', err);
-		document.getElementById('stationCount').textContent = 'Error loading stations';
+		const stationCountEl = document.getElementById('stationCount');
+		if (stationCountEl) {
+			stationCountEl.textContent = 'Error loading stations';
+		}
 	}
 }
 
