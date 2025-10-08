@@ -173,6 +173,57 @@ body {
     padding: 0.5rem;
 }
 
+/* Date Filter Container */
+.date-filter-container {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.month-label {
+    color: var(--text-secondary);
+    font-size: 0.875rem;
+    font-weight: 500;
+    margin: 0;
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+}
+
+.month-label i {
+    color: var(--primary-blue);
+}
+
+.month-select {
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid var(--card-border);
+    color: var(--text-primary);
+    padding: 0.5rem 1rem;
+    border-radius: 6px;
+    font-size: 0.875rem;
+    min-width: 160px;
+    cursor: pointer;
+    transition: all 0.3s;
+    font-family: inherit;
+}
+
+.month-select:hover {
+    background: rgba(255, 255, 255, 0.08);
+    border-color: var(--primary-blue);
+}
+
+.month-select:focus {
+    outline: none;
+    border-color: var(--primary-blue);
+    box-shadow: 0 0 0 3px rgba(0, 212, 255, 0.1);
+}
+
+/* Style for the month picker calendar icon */
+.month-select::-webkit-calendar-picker-indicator {
+    filter: invert(1);
+    cursor: pointer;
+}
+
 /* Main Container */
 .main-container {
     max-width: 1600px;
@@ -379,6 +430,16 @@ body {
         width: 100%;
     }
     
+    .date-filter-container {
+        order: 5;
+        width: 100%;
+        justify-content: center;
+    }
+    
+    .month-select {
+        width: 100%;
+    }
+    
     .main-container {
         padding: 1rem;
     }
@@ -425,6 +486,15 @@ body {
     }
     
     .station-label {
+        font-size: 0.75rem;
+    }
+    
+    .month-select {
+        min-width: unset;
+        font-size: 0.75rem;
+    }
+    
+    .month-label {
         font-size: 0.75rem;
     }
 }

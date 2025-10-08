@@ -97,6 +97,21 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         });
     }
+    
+    // Add month filter event listener
+    const monthSelect = document.getElementById('monthSelect');
+    if (monthSelect) {
+        // Set default to current month
+        const now = new Date();
+        const currentMonth = now.toISOString().slice(0, 7); // Format: YYYY-MM
+        monthSelect.value = currentMonth;
+        
+        monthSelect.addEventListener('change', async function(e) {
+            if (currentStation) {
+                await loadStationData(currentStation);
+            }
+        });
+    }
 });
 
 async function initializeDashboard() {
@@ -182,17 +197,42 @@ async function loadStationData(station) {
     try {
         showLoading(true);
         
+        // Get selected month from filter
+        const monthSelect = document.getElementById('monthSelect');
+        let startDate = null;
+        let endDate = null;
+        
+        if (monthSelect && monthSelect.value) {
+            // Parse selected month (format: YYYY-MM)
+            const [year, month] = monthSelect.value.split('-').map(Number);
+            
+            // First day of the month
+            startDate = new Date(year, month - 1, 1).toISOString().split('T')[0];
+            
+            // Last day of the month
+            const lastDay = new Date(year, month, 0).getDate();
+            endDate = new Date(year, month - 1, lastDay).toISOString().split('T')[0];
+        }
+        
+        // Build query parameters
+        const buildUrl = (metric) => {
+            let url = `/api/bom/timeseries?station_name=${encodeURIComponent(station.station_name)}&metric=${metric}`;
+            if (startDate) url += `&start_date=${startDate}`;
+            if (endDate) url += `&end_date=${endDate}`;
+            return url;
+        };
+        
         const [tempResponse, humidityResponse, windResponse] = await Promise.all([
-            fetch(`/api/bom/timeseries?station_name=${encodeURIComponent(station.station_name)}&metric=max_temperature_c`),
-            fetch(`/api/bom/timeseries?station_name=${encodeURIComponent(station.station_name)}&metric=min_relative_humidity_pct`),
-            fetch(`/api/bom/timeseries?station_name=${encodeURIComponent(station.station_name)}&metric=wind_speed_m_per_sec`)
+            fetch(buildUrl('max_temperature_c')),
+            fetch(buildUrl('min_relative_humidity_pct')),
+            fetch(buildUrl('wind_speed_m_per_sec'))
         ]);
         
         const tempData = tempResponse.ok ? await tempResponse.json() : null;
         const humidityData = humidityResponse.ok ? await humidityResponse.json() : null;
         const windData = windResponse.ok ? await windResponse.json() : null;
         
-        const minTempResponse = await fetch(`/api/bom/timeseries?station_name=${encodeURIComponent(station.station_name)}&metric=min_temperature_c`);
+        const minTempResponse = await fetch(buildUrl('min_temperature_c'));
         const minTempData = minTempResponse.ok ? await minTempResponse.json() : null;
         
         const timeSeriesData = {
