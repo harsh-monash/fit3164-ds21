@@ -33,10 +33,6 @@ def get_db():
 async def init_db():
     """Initialize database and create tables"""
     try:
-        # Import all models here to ensure they are registered with SQLAlchemy
-        # Use package paths after repository reorganization
-        import src.api.models as api_models
-        import src.database.models as bom_models
 
         # Create all tables
         Base.metadata.create_all(bind=engine)
