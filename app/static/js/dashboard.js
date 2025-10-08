@@ -543,8 +543,13 @@ function initializeSearch() {
 		// Clear results if query is empty
 		if (!query) {
 			searchResults.innerHTML = '';
+			hideSearchResults();
 			return;
 		}
+		
+		// Show results container while searching
+		showSearchResults();
+		searchResults.innerHTML = '<div class="list-group-item">Searching...</div>';
 		
 		// Debounce search requests
 		searchTimeout = setTimeout(() => {
@@ -592,11 +597,19 @@ async function performLocationSearch(query) {
 		
 		const results = await response.json();
 		
+		// Check if no results found
+		if (!results || results.length === 0) {
+			searchResults.innerHTML = '<div class="list-group-item">No locations found. Try a different search term.</div>';
+			return;
+		}
+		
 		// Display results
 		searchResults.innerHTML = results.map(result => `
 			<button class="list-group-item list-group-item-action" data-lat="${result.lat}" data-lon="${result.lon}" data-name="${result.display_name}">
-				<div class="fw-bold">${result.name || result.display_name}</div>
-				<small class="text-muted">${result.display_name}</small>
+				<div class="d-flex flex-column">
+					<div class="fw-bold mb-1">${result.name || result.display_name.split(',')[0]}</div>
+					<small class="text-muted">${result.display_name}</small>
+				</div>
 			</button>
 		`).join('');
 		
@@ -608,7 +621,7 @@ async function performLocationSearch(query) {
 				const name = item.dataset.name;
 				
 				selectLocation(lat, lon, name);
-				searchResults.innerHTML = '';
+				// Don't clear results immediately - let the selectLocation function handle it
 			});
 		});
 		
