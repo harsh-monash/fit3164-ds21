@@ -32,29 +32,61 @@ A comprehensive web application for visualizing and analyzing weather data from 
 
 ## Project Structure
 
-```
-├── src/
+├── app/
 │   ├── api/
-│   │   ├── main.py              # FastAPI application
-│   │   ├── api_routes.py        # API endpoints
-│   │   └── models.py            # SQLAlchemy models
+│   │   ├── main.py               # Entry point for FastAPI application
+│   │   ├── api_routes.py         # Defines API endpoints and route logic
+│   │   ├── models.py             # Pydantic models for request/response validation
+│   │   └── utils.py              # Helper functions for API operations (e.g., data formatting)
 │   └── database/
-│       ├── connection.py        # Database configuration
-│       └── models.py            # BOM-specific models
+│       ├── connection.py         # Configures SQLAlchemy engine and database sessions
+│       ├── models.py             # SQLAlchemy ORM models for stations and observations
+│       └── init_db.py            # Database initialization and schema creation
+│
 ├── frontend/
 │   ├── templates/
-│   │   └── dashboard.html       # Main dashboard page
+│   │   └── dashboard.html        # Main dashboard page for interactive weather visualisation
 │   └── static/
 │       ├── css/
-│       │   └── dashboard.css    # Dashboard styles
-│       └── js/
-│           └── dashboard.js     # Dashboard functionality
-├── scripts/                     # Utility scripts
-├── tests/                       # Test files
-├── config/                      # Configuration files
-├── docs/                        # Documentation
-└── deployment/                  # Deployment configurations
-```
+│       │   └── dashboard.css     # Styles for the dashboard layout and map
+│       ├── js/
+│       │   ├── dashboard.js      # Core frontend logic (Leaflet map, overlays, API calls)
+│       │   ├── chartHandler.js   # Chart.js integrations for visualising weather data
+│       │   └── layerControl.js   # Leaflet layer management for weather metric overlays
+│       └── img/                  # Static images or icons used in the interface
+│
+├── config/
+│   ├── .env.example              # Example environment variables (copy to `.env` before running)
+│   └── settings.yaml             # Optional additional configuration for deployment/runtime
+│
+├── scripts/
+│   ├── data_ingestion.py         # Script to fetch and insert BOM data into the database
+│   ├── health_check.py           # Verifies API and database connectivity
+│   └── export_geojson.py         # Exports station or weather data as GeoJSON for frontend use
+│
+├── tests/
+│   ├── test_api.py               # Unit tests for API endpoints
+│   ├── test_database.py          # Tests for database connectivity and schema
+│   └── test_utils.py             # Tests for helper and utility functions
+│
+├── docs/
+│   ├── Frontend_Backend_Architecture_Report.md  # Explains system architecture and data flow
+│   ├── README_Project_Structure.md              # Detailed project organisation reference
+│   └── API_Documentation.md                     # API routes, parameters, and example responses
+│
+├── deployment/
+│   ├── Dockerfile                # Docker build file for the FastAPI application
+│   ├── docker-compose.yml        # Defines multi-container setup (API + Postgres + PostGIS)
+│   └── docker-compose.app.yml    # Lightweight Compose file for local app-only setup
+│
+├── data/                         # Local or downloaded datasets (e.g., BOM or Open-Meteo)
+├── dummy/                        # Placeholder or mock data for development/testing
+├── temp/                         # Temporary storage for cached or intermediate files
+│
+├── start_server.py               # Script to launch FastAPI with env and config setup
+├── requirements.txt              # Python package dependencies
+├── README.md                     # Main documentation and setup instructions
+└── .gitignore                    # Files and directories ignored by Git
 
 ## Setup Instructions
 
