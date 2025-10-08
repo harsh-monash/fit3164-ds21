@@ -130,6 +130,24 @@ async function initializeDashboard() {
             document.getElementById('loadingState').innerHTML = 
                 '<div class="alert alert-warning">Data loaded successfully, but some charts may not display properly.</div>';
         }
+        
+        // Check if a station was specified in the URL (from map)
+        const urlParams = new URLSearchParams(window.location.search);
+        const stationParam = urlParams.get('station');
+        if (stationParam && allStations.length > 0) {
+            const station = allStations.find(s => s.station_name === stationParam);
+            if (station) {
+                // Select the station in dropdown
+                const stationSelect = document.getElementById('stationSelect');
+                if (stationSelect) {
+                    stationSelect.value = station.station_name;
+                }
+                // Load the station data
+                currentStation = station;
+                await loadStationData(station);
+            }
+        }
+        
     } catch (error) {
         console.error('Failed to load data:', error);
         showError(true);
