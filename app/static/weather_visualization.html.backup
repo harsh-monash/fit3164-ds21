@@ -1,0 +1,421 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NSW Weather Analytics Dashboard</title>
+    
+    <!-- CSS Dependencies -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Chart.js (CDN) -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    
+    <!-- Custom CSS (served at /static) -->
+    <link rel="stylesheet" href="/static/css/weather_visualization.css">
+    
+    <style>
+        :root {
+            --primary-color: #0d6efd;
+            --secondary-color: #6c757d;
+            --success-color: #198754;
+            --info-color: #0dcaf0;
+            --warning-color: #ffc107;
+            --danger-color: #dc3545;
+            --dark-color: #212529;
+            --light-color: #f8f9fa;
+        }
+        
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            padding: 20px 0;
+        }
+        
+        .main-container {
+            background: rgba(255, 255, 255, 0.95);
+            /* backdrop-filter: blur(10px); */
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            margin: 0 auto;
+            padding: 30px;
+            max-width: 1400px;
+        }
+        
+        .weather-header {
+            background: linear-gradient(45deg, #4facfe 0%, #00f2fe 100%);
+            color: white;
+            padding: 25px;
+            border-radius: 15px;
+            margin-bottom: 30px;
+            text-align: center;
+            box-shadow: 0 10px 30px rgba(79, 172, 254, 0.3);
+        }
+        
+        .weather-header h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 10px;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        
+        .weather-header p {
+            font-size: 1.1rem;
+            opacity: 0.9;
+            margin: 0;
+        }
+        
+        .stats-card {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            margin-bottom: 25px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08);
+            border: 1px solid rgba(0, 0, 0, 0.05);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        
+        .stats-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.15);
+        }
+        
+        .stats-card h3 {
+            color: var(--primary-color);
+            font-weight: 600;
+            margin-bottom: 20px;
+            font-size: 1.3rem;
+        }
+        
+        .chart-container {
+            position: relative;
+            height: 400px;
+            margin-top: 20px;
+        }
+        
+        .metric-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 0;
+            border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+        }
+        
+        .metric-item:last-child {
+            border-bottom: none;
+        }
+        
+        .metric-label {
+            font-weight: 500;
+            color: var(--dark-color);
+        }
+        
+        .metric-value {
+            font-weight: 700;
+            color: var(--primary-color);
+            font-size: 1.1rem;
+        }
+        
+        .temperature-high { color: var(--danger-color); }
+        .temperature-low { color: var(--info-color); }
+        .humidity { color: var(--success-color); }
+        .wind { color: var(--warning-color); }
+        .pressure { color: var(--secondary-color); }
+        
+        .loading-spinner {
+            text-align: center;
+            padding: 40px;
+        }
+        
+        .alert-custom {
+            border-radius: 10px;
+            border: none;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.07);
+        }
+        
+        .nav-tabs .nav-link {
+            border-radius: 10px 10px 0 0;
+            border: none;
+            color: var(--secondary-color);
+            font-weight: 500;
+        }
+        
+        .nav-tabs .nav-link.active {
+            background-color: var(--primary-color);
+            color: white;
+        }
+        
+        .tab-content {
+            background: white;
+            border-radius: 0 15px 15px 15px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08);
+        }
+        
+        .weather-summary {
+            background: linear-gradient(45deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 15px;
+            margin-bottom: 25px;
+        }
+        
+        .summary-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-top: 15px;
+        }
+        
+        .summary-item {
+            text-align: center;
+            padding: 15px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            /* backdrop-filter: blur(5px); */
+        }
+        
+        .summary-item i {
+            font-size: 2rem;
+            margin-bottom: 10px;
+            display: block;
+        }
+        
+        .summary-value {
+            font-size: 1.5rem;
+            font-weight: 700;
+            margin-bottom: 5px;
+        }
+        
+        .summary-label {
+            font-size: 0.9rem;
+            opacity: 0.8;
+        }
+        
+        @media (max-width: 768px) {
+            .main-container {
+                margin: 10px;
+                padding: 20px;
+            }
+            
+            .weather-header h1 {
+                font-size: 2rem;
+            }
+            
+            .chart-container {
+                height: 300px;
+            }
+        }
+</head>
+<body>
+    <div class="container-fluid">
+        <div class="main-container">
+            <!-- Header Section -->
+            <div class="weather-header">
+                <h1><i class="fas fa-cloud-sun-rain"></i> NSW Weather Analytics</h1>
+                <p>Advanced Weather Intelligence Dashboard for New South Wales</p>
+                <button id="refreshBtn" class="btn btn-light btn-sm mt-2">
+                    <i class="fas fa-sync-alt"></i> Refresh Data
+                </button>
+            </div>
+
+            <!-- Weather Summary Section -->
+            <div class="weather-summary">
+                <h3><i class="fas fa-chart-line"></i> Current Weather Overview</h3>
+                <div class="summary-grid" id="weatherSummary">
+                    <div class="summary-item">
+                        <i class="fas fa-thermometer-half temperature-high"></i>
+                        <div class="summary-value" id="avgTemp">--°C</div>
+                        <div class="summary-label">Average Temperature</div>
+                    </div>
+                    <div class="summary-item">
+                        <i class="fas fa-tint humidity"></i>
+                        <div class="summary-value" id="avgHumidity">--%</div>
+                        <div class="summary-label">Average Humidity</div>
+                    </div>
+                    <div class="summary-item">
+                        <i class="fas fa-wind wind"></i>
+                        <div class="summary-value" id="avgWind">-- km/h</div>
+                        <div class="summary-label">Average Wind Speed</div>
+                    </div>
+                    <div class="summary-item">
+                        <i class="fas fa-compress-arrows-alt pressure"></i>
+                        <div class="summary-value" id="avgPressure">-- hPa</div>
+                        <div class="summary-label">Average Pressure</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Navigation Tabs -->
+            <ul class="nav nav-tabs" id="weatherTabs" role="tablist">
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link active" id="overview-tab" data-bs-toggle="tab" data-bs-target="#overview" type="button" role="tab">
+                        <i class="fas fa-chart-area"></i> Overview
+                    </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="temperature-tab" data-bs-toggle="tab" data-bs-target="#temperature" type="button" role="tab">
+                        <i class="fas fa-thermometer-half"></i> Temperature
+                    </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="precipitation-tab" data-bs-toggle="tab" data-bs-target="#precipitation" type="button" role="tab">
+                        <i class="fas fa-cloud-rain"></i> Precipitation
+                    </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="wind-tab" data-bs-toggle="tab" data-bs-target="#wind" type="button" role="tab">
+                        <i class="fas fa-wind"></i> Wind Patterns
+                    </button>
+                </li>
+            </ul>
+
+            <!-- Tab Content -->
+            <div class="tab-content" id="weatherTabContent">
+                <!-- Overview Tab -->
+                <div class="tab-pane fade show active" id="overview" role="tabpanel">
+                    <div class="row p-4">
+                        <div class="col-lg-8">
+                            <div class="stats-card">
+                                <h3><i class="fas fa-chart-line"></i> Temperature & Humidity Trends</h3>
+                                <div class="chart-container">
+                                    <canvas id="overviewChart"></canvas>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-lg-4">
+                            <div class="stats-card">
+                                <h3><i class="fas fa-info-circle"></i> Quick Stats</h3>
+                                <div id="quickStats">
+                                    <div class="metric-item">
+                                        <span class="metric-label">Active Stations</span>
+                                        <span class="metric-value" id="stationCount">--</span>
+                                    </div>
+                                    <div class="metric-item">
+                                        <span class="metric-label">Last Updated</span>
+                                        <span class="metric-value" id="lastUpdate">--</span>
+                                    </div>
+                                    <div class="metric-item">
+                                        <span class="metric-label">Data Points</span>
+                                        <span class="metric-value" id="dataPoints">--</span>
+                                    </div>
+                                    <div class="metric-item">
+                                        <span class="metric-label">Coverage Area</span>
+                                        <span class="metric-value">NSW</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Temperature Tab -->
+                <div class="tab-pane fade" id="temperature" role="tabpanel">
+                    <div class="row p-4">
+                        <div class="col-lg-6">
+                            <div class="stats-card">
+                                <h3><i class="fas fa-thermometer-half temperature-high"></i> Temperature Distribution</h3>
+                                <div class="chart-container">
+                                    <canvas id="temperatureChart"></canvas>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-lg-6">
+                            <div class="stats-card">
+                                <h3><i class="fas fa-chart-bar"></i> Temperature Extremes</h3>
+                                <div class="chart-container">
+                                    <canvas id="tempExtremesChart"></canvas>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Precipitation Tab -->
+                <div class="tab-pane fade" id="precipitation" role="tabpanel">
+                    <div class="row p-4">
+                        <div class="col-lg-8">
+                            <div class="stats-card">
+                                <h3><i class="fas fa-cloud-rain"></i> Rainfall Patterns</h3>
+                                <div class="chart-container">
+                                    <canvas id="precipitationChart"></canvas>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-lg-4">
+                            <div class="stats-card">
+                                <h3><i class="fas fa-tachometer-alt"></i> Rainfall Metrics</h3>
+                                <div id="precipitationStats">
+                                    <div class="metric-item">
+                                        <span class="metric-label">Total Rainfall</span>
+                                        <span class="metric-value" id="totalRainfall">-- mm</span>
+                                    </div>
+                                    <div class="metric-item">
+                                        <span class="metric-label">Max Daily</span>
+                                        <span class="metric-value" id="maxDailyRain">-- mm</span>
+                                    </div>
+                                    <div class="metric-item">
+                                        <span class="metric-label">Rainy Days</span>
+                                        <span class="metric-value" id="rainyDays">--</span>
+                                    </div>
+                                    <div class="metric-item">
+                                        <span class="metric-label">Dry Spell</span>
+                                        <span class="metric-value" id="drySpell">-- days</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Wind Tab -->
+                <div class="tab-pane fade" id="wind" role="tabpanel">
+                    <div class="row p-4">
+                        <div class="col-lg-6">
+                            <div class="stats-card">
+                                <h3><i class="fas fa-wind wind"></i> Wind Speed Trends</h3>
+                                <div class="chart-container">
+                                    <canvas id="windSpeedChart"></canvas>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-lg-6">
+                            <div class="stats-card">
+                                <h3><i class="fas fa-compass"></i> Wind Direction</h3>
+                                <div class="chart-container">
+                                    <canvas id="windDirectionChart"></canvas>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Loading State -->
+            <div id="loadingState" class="loading-spinner" style="display: none;">
+                <div class="spinner-border text-primary" role="status" style="width: 3rem; height: 3rem;">
+                    <span class="visually-hidden">Loading weather data...</span>
+                </div>
+                <p class="mt-3 text-muted">Loading weather analytics...</p>
+            </div>
+
+            <!-- Error State -->
+            <div id="errorState" class="alert alert-danger alert-custom" style="display: none;">
+                <h4 class="alert-heading"><i class="fas fa-exclamation-triangle"></i> Data Loading Error</h4>
+                <p>Unable to load weather data. Please check your connection and try again.</p>
+                <button class="btn btn-outline-danger" id="retryBtn">
+                    <i class="fas fa-redo"></i> Retry
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bootstrap 5.3.0 JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+    <!-- Custom JavaScript -->
+    <script src="/static/js/weather_visualization.js"></script>
+
+</body>
+</html>

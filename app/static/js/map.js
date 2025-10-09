@@ -180,9 +180,8 @@ function createPopupContent(station, temperature) {
         `${temperature.toFixed(1)}°C` : 
         '<span style="color: #6b7280;">No data</span>';
     
-    const stateDisplay = station.state || 'Unknown';
-    const elevationDisplay = station.elevation ? 
-        `${station.elevation}m` : 
+    const coordinatesDisplay = station.latitude && station.longitude ?
+        `${station.latitude.toFixed(4)}, ${station.longitude.toFixed(4)}` :
         'Unknown';
     
     return `
@@ -199,13 +198,8 @@ function createPopupContent(station, temperature) {
                 </div>
                 <div class="station-info-row">
                     <i class="fas fa-map-marker-alt"></i>
-                    <span class="station-info-label">State:</span>
-                    <span class="station-info-value">${stateDisplay}</span>
-                </div>
-                <div class="station-info-row">
-                    <i class="fas fa-mountain"></i>
-                    <span class="station-info-label">Elevation:</span>
-                    <span class="station-info-value">${elevationDisplay}</span>
+                    <span class="station-info-label">Coordinates:</span>
+                    <span class="station-info-value">${coordinatesDisplay}</span>
                 </div>
                 <div class="station-info-row">
                     <i class="fas fa-${station.is_active ? 'check-circle' : 'times-circle'}"></i>
