@@ -272,6 +272,52 @@ function setupMapControls() {
             });
         });
     }
+    
+    // Expand/fullscreen button
+    const expandMapBtn = document.getElementById('expandMapBtn');
+    if (expandMapBtn) {
+        expandMapBtn.addEventListener('click', function() {
+            const mapContainer = document.querySelector('.map-container');
+            
+            if (mapContainer.classList.contains('fullscreen')) {
+                // Exit fullscreen
+                mapContainer.classList.remove('fullscreen');
+                expandMapBtn.classList.remove('expanded');
+                expandMapBtn.innerHTML = '<i class="fas fa-expand"></i>';
+                expandMapBtn.title = 'Expand map to fullscreen';
+                
+                // Force map to resize
+                setTimeout(() => {
+                    if (stationMap) {
+                        stationMap.invalidateSize();
+                    }
+                }, 100);
+            } else {
+                // Enter fullscreen
+                mapContainer.classList.add('fullscreen');
+                expandMapBtn.classList.add('expanded');
+                expandMapBtn.innerHTML = '<i class="fas fa-compress"></i>';
+                expandMapBtn.title = 'Exit fullscreen';
+                
+                // Force map to resize
+                setTimeout(() => {
+                    if (stationMap) {
+                        stationMap.invalidateSize();
+                    }
+                }, 100);
+            }
+        });
+        
+        // Also handle ESC key to exit fullscreen
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                const mapContainer = document.querySelector('.map-container');
+                if (mapContainer && mapContainer.classList.contains('fullscreen')) {
+                    expandMapBtn.click();
+                }
+            }
+        });
+    }
 }
 
 // Integrate map with search box

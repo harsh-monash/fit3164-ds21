@@ -385,9 +385,10 @@ function initializeCharts(realData = null) {
                 minTempData = maxTempData.map(t => t ? t - 8 : null);
             }
         } else {
-            labels = generateDateLabels(30);
-            maxTempData = generateRandomData(30, 15, 35);
-            minTempData = generateRandomData(30, 5, 20);
+            // No data available
+            labels = [];
+            maxTempData = [];
+            minTempData = [];
         }
         
         charts.temperature = new Chart(tempCtx, {
@@ -429,7 +430,7 @@ function initializeCharts(realData = null) {
                         display: true,
                         text: hasTimeSeries ? 
                             `${chartData.timeSeries.station.station_name} - ${dateRange}` : 
-                            'Temperature Trends',
+                            'Temperature Trends - No Data Available',
                         color: '#ffffff'
                     }
                 }
@@ -455,8 +456,9 @@ function initializeCharts(realData = null) {
             labels = commonLabels.slice(0, windDataFull.length);
             windData = windDataFull.map(d => d.value ? (d.value * 3.6).toFixed(1) : null);
         } else {
-            labels = generateDateLabels(30);
-            windData = generateRandomData(30, 10, 40);
+            // No data available
+            labels = [];
+            windData = [];
         }
         
         charts.windSpeed = new Chart(windCtx, {
@@ -482,7 +484,7 @@ function initializeCharts(realData = null) {
                         display: true,
                         text: hasTimeSeries ? 
                             `${chartData.timeSeries.station.station_name} - ${dateRange}` : 
-                            'Wind Speed Trends',
+                            'Wind Speed Trends - No Data Available',
                         color: '#ffffff'
                     }
                 }
@@ -508,8 +510,9 @@ function initializeCharts(realData = null) {
             labels = commonLabels.slice(0, humData.length);
             humidityData = humData.map(d => d.value);
         } else {
-            labels = generateDateLabels(30);
-            humidityData = generateRandomData(30, 40, 80);
+            // No data available
+            labels = [];
+            humidityData = [];
         }
         
         charts.humidity = new Chart(humCtx, {
@@ -535,7 +538,7 @@ function initializeCharts(realData = null) {
                         display: true,
                         text: hasTimeSeries ? 
                             `${chartData.timeSeries.station.station_name} - ${dateRange}` : 
-                            'Humidity Trends',
+                            'Humidity Trends - No Data Available',
                         color: '#ffffff'
                     }
                 }
@@ -553,14 +556,6 @@ function generateDateLabels(count) {
         labels.push(date.toLocaleDateString('en-AU', { month: 'short', day: 'numeric' }));
     }
     return labels;
-}
-
-function generateRandomData(count, min, max) {
-    const data = [];
-    for (let i = 0; i < count; i++) {
-        data.push((Math.random() * (max - min) + min).toFixed(1));
-    }
-    return data;
 }
 
 function showLoading(show) {
@@ -586,6 +581,7 @@ function showError(show) {
 }
 
 // Export functions (placeholders for compatibility)
+// todo 
 function exportChart(chartType) {
     console.log('Export chart:', chartType);
     alert('Export functionality coming soon!');

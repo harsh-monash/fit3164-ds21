@@ -14,7 +14,7 @@
     <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.Default.css" />
     
     <link rel="stylesheet" href="/static/css/weather_visualization.css?v=3.0">
-    <link rel="stylesheet" href="/static/css/map.css?v=1.1">
+    <link rel="stylesheet" href="/static/css/map.css?v=1.2">
     <style>
         /* Dark theme hero section */
         body, html { 
@@ -424,6 +424,9 @@
                     <button id="resetViewBtn" class="map-btn" title="Reset map view">
                         <i class="fas fa-home"></i>
                     </button>
+                    <button id="expandMapBtn" class="map-btn" title="Expand map to fullscreen">
+                        <i class="fas fa-expand"></i>
+                    </button>
                 </div>
                 
                 <!-- Map Legend -->
@@ -517,7 +520,7 @@
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script src="https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js"></script>
     
-    <script src="/static/js/map.js?v=1.2"></script>
+    <script src="/static/js/map.js?v=1.3"></script>
     <script>
         // ===================================================
         // Search Functionality - Extracted from dashboard.js

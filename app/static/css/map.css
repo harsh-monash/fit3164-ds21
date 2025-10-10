@@ -128,7 +128,7 @@
     border: 1px solid var(--card-border);
     border-radius: 12px;
     padding: 1rem;
-    backdrop-filter: blur(10px);
+    /* backdrop-filter: blur(10px); */
     z-index: 1000;
     box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
 }
@@ -309,14 +309,14 @@
 .marker-cluster-small,
 .marker-cluster-medium,
 .marker-cluster-large {
-    background-color: rgba(0, 212, 255, 0.3) !important;
-    border: 2px solid var(--primary-blue) !important;
+    background-color: rgba(236, 72, 153, 0.3) !important;
+    border: 2px solid #ec4899 !important;
 }
 
 .marker-cluster-small div,
 .marker-cluster-medium div,
 .marker-cluster-large div {
-    background-color: rgba(0, 212, 255, 0.6) !important;
+    background-color: rgba(236, 72, 153, 0.6) !important;
     color: white !important;
     font-weight: 600 !important;
 }
@@ -460,4 +460,37 @@
     .map-title {
         font-size: 1.25rem;
     }
+}
+
+/* Fullscreen Map Styles */
+.map-container.fullscreen {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    width: 100vw;
+    height: 100vh;
+    z-index: 9999;
+    border-radius: 0;
+    margin: 0;
+}
+
+.map-container.fullscreen #stationMap {
+    height: 100vh;
+}
+
+.map-container.fullscreen .map-controls {
+    top: 20px;
+    right: 20px;
+}
+
+.map-container.fullscreen .map-legend {
+    bottom: 20px;
+    left: 20px;
+}
+
+/* Expand/Collapse button icon change */
+#expandMapBtn.expanded i::before {
+    content: "\f066"; /* fa-compress icon */
 }
