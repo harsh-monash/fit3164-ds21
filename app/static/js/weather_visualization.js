@@ -584,12 +584,39 @@ function showError(show) {
 // todo 
 function exportChart(chartType) {
     console.log('Export chart:', chartType);
-    alert('Export functionality coming soon!');
+    // alert('Export functionality coming soon!');
+    if (charts[chartType]) {
+        const link = document.createElement('a');
+        link.href = charts[chartType].toBase64Image();
+        link.download = `${chartType}_chart.png`;
+        link.click();
+    } else {
+        alert('Chart not available for export.');
+    }
 }
 
 function exportAllCharts() {
     console.log('Export all charts');
-    alert('Export all charts functionality coming soon!');
+    
+    const availableCharts = Object.keys(charts).filter(chartType => charts[chartType]);
+    
+    if (availableCharts.length === 0) {
+        alert('No charts available for export. Please load data first.');
+        return;
+    }
+    
+    // Export each chart with a small delay to avoid browser blocking multiple downloads
+    availableCharts.forEach((chartType, index) => {
+        setTimeout(() => {
+            const link = document.createElement('a');
+            link.href = charts[chartType].toBase64Image();
+            const stationName = currentStation ? currentStation.station_name.replace(/\s+/g, '_') : 'station';
+            link.download = `${stationName}_${chartType}_chart.png`;
+            link.click();
+        }, index * 300); // 300ms delay between each download
+    });
+    
+    console.log(`Exporting ${availableCharts.length} charts...`);
 }
 
 function exportDashboard() {
@@ -599,5 +626,91 @@ function exportDashboard() {
 
 function exportData(format) {
     console.log('Export data:', format);
-    alert(`Export data as ${format} coming soon!`);
+    
+    if (!currentWeatherData) {
+        alert('No data available for export. Please select a station and load data first.');
+        return;
+    }
+    
+    if (format === 'csv') {
+        exportAsCSV();
+    } else if (format === 'json') {
+        exportAsJSON();
+    } else if (format === 'pdf') {
+        alert('PDF export functionality coming soon!');
+    } else {
+        alert('Unsupported export format.');
+    }
+}
+
+function exportAsCSV() {
+    let csvContent = 'data:text/csv;charset=utf-8,';
+    
+    // Add header with station info
+    const stationName = currentStation ? currentStation.station_name : 'Unknown Station';
+    csvContent += `Station: ${stationName}\n`;
+    csvContent += `Export Date: ${new Date().toLocaleString('en-AU')}\n\n`;
+    
+    // Add column headers
+    csvContent += 'Date,Max Temperature (C),Min Temperature (C),Humidity (%),Wind Speed (km/h)\n';
+    
+    const tempData = currentWeatherData.timeSeries.temperature.data || [];
+    const minTempData = currentWeatherData.timeSeries.minTemperature ? currentWeatherData.timeSeries.minTemperature.data : [];
+    const humData = currentWeatherData.timeSeries.humidity ? currentWeatherData.timeSeries.humidity.data : [];
+    const windData = currentWeatherData.timeSeries.wind ? currentWeatherData.timeSeries.wind.data : [];
+    
+    const maxLength = Math.max(tempData.length, minTempData.length, humData.length, windData.length);
+    
+    for (let i = 0; i < maxLength; i++) {
+        const date = tempData[i] ? tempData[i].date : 
+                     minTempData[i] ? minTempData[i].date : 
+                     humData[i] ? humData[i].date : 
+                     windData[i] ? windData[i].date : '';
+        const maxTemp = tempData[i] ? tempData[i].value : '';
+        const minTemp = minTempData[i] ? minTempData[i].value : '';
+        const humidity = humData[i] ? humData[i].value : '';
+        const windSpeed = windData[i] ? (windData[i].value * 3.6).toFixed(1) : ''; // Convert m/s to km/h
+        
+        csvContent += `${date},${maxTemp},${minTemp},${humidity},${windSpeed}\n`;
+    }
+    
+    const encodedUri = encodeURI(csvContent);
+    const link = document.createElement('a');
+    link.setAttribute('href', encodedUri);
+    link.setAttribute('download', `weather_data_${stationName.replace(/\s+/g, '_')}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    
+    console.log('CSV export completed');
+}
+
+function exportAsJSON() {
+    const exportData = {
+        station: currentStation,
+        exportDate: new Date().toISOString(),
+        weatherData: {
+            temperature: currentWeatherData.timeSeries.temperature.data || [],
+            minTemperature: currentWeatherData.timeSeries.minTemperature ? currentWeatherData.timeSeries.minTemperature.data : [],
+            humidity: currentWeatherData.timeSeries.humidity ? currentWeatherData.timeSeries.humidity.data : [],
+            windSpeed: currentWeatherData.timeSeries.wind ? currentWeatherData.timeSeries.wind.data : []
+        },
+        summary: currentWeatherData.timeSeries.summary || {}
+    };
+    
+    const jsonString = JSON.stringify(exportData, null, 2);
+    const blob = new Blob([jsonString], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    
+    const stationName = currentStation ? currentStation.station_name : 'Unknown_Station';
+    const link = document.createElement('a');
+    link.setAttribute('href', url);
+    link.setAttribute('download', `weather_data_${stationName.replace(/\s+/g, '_')}.json`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    
+    URL.revokeObjectURL(url);
+    
+    console.log('JSON export completed');
 }

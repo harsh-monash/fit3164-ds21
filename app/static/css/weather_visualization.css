@@ -28,10 +28,16 @@ body {
 .top-navbar {
     background: var(--card-bg);
     border-bottom: 1px solid var(--card-border);
-    padding: 1rem 2rem;
+    padding: 0.75rem 2rem;
     display: flex;
     justify-content: space-between;
     align-items: center;
+    gap: 2rem;
+    position: sticky;
+    top: 0;
+    z-index: 1000;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+    flex-wrap: wrap;
 }
 
 .brand {
@@ -41,93 +47,66 @@ body {
     font-size: 1.25rem;
     font-weight: 600;
     color: var(--text-primary);
+    white-space: nowrap;
 }
 
 .brand-icon {
-    width: 32px;
-    height: 32px;
-    background: var(--primary-blue);
-    border-radius: 6px;
+    width: 36px;
+    height: 36px;
+    background: linear-gradient(135deg, var(--primary-blue) 0%, #0099cc 100%);
+    border-radius: 8px;
     display: flex;
     align-items: center;
     justify-content: center;
+    box-shadow: 0 2px 8px rgba(0, 212, 255, 0.3);
 }
 
 .brand-icon i {
     color: white;
+    font-size: 1.125rem;
 }
 
 .nav-tabs-custom {
     display: flex;
-    gap: 1rem;
+    gap: 0.5rem;
     border: none;
     margin: 0;
     padding: 0;
     list-style: none;
+    flex-shrink: 0;
 }
 
 .nav-tabs-custom .nav-link {
     background: transparent;
-    border: none;
+    border: 1px solid transparent;
     color: var(--text-secondary);
-    padding: 0.5rem 1rem;
-    border-radius: 6px;
+    padding: 0.5rem 1.25rem;
+    border-radius: 8px;
     transition: all 0.3s;
     cursor: pointer;
+    font-size: 0.875rem;
+    font-weight: 500;
+    white-space: nowrap;
 }
 
 .nav-tabs-custom .nav-link:hover {
     color: var(--text-primary);
-    background: rgba(255, 255, 255, 0.05);
+    background: rgba(0, 212, 255, 0.1);
+    border-color: rgba(0, 212, 255, 0.3);
 }
 
 .nav-tabs-custom .nav-link.active {
-    background: var(--accent-blue);
+    background: linear-gradient(135deg, var(--accent-blue) 0%, #0099cc 100%);
     color: var(--text-primary);
+    border-color: var(--accent-blue);
+    box-shadow: 0 2px 8px rgba(0, 212, 255, 0.3);
 }
 
-.user-profile {
-    display: flex;
-    align-items: center;
-    gap: 1rem;
-}
-
-.settings-icon {
-    cursor: pointer;
-    color: var(--text-secondary);
-    font-size: 1.25rem;
-    transition: color 0.3s;
-}
-
-.settings-icon:hover {
-    color: var(--text-primary);
-}
-
-.user-avatar {
-    width: 36px;
-    height: 36px;
-    border-radius: 50%;
-    background: var(--accent-blue);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    cursor: pointer;
-    transition: transform 0.2s;
-}
-
-.user-avatar i {
-    color: white;
-}
-
-.user-avatar:hover {
-    transform: scale(1.1);
-}
-
-/* Station Selector */
 .station-selector-container {
     display: flex;
     align-items: center;
     gap: 0.5rem;
+    flex-shrink: 0;
 }
 
 .station-label {
@@ -137,47 +116,45 @@ body {
     margin: 0;
     display: flex;
     align-items: center;
-    gap: 0.25rem;
+    gap: 0.375rem;
+    white-space: nowrap;
 }
 
 .station-label i {
     color: var(--primary-blue);
+    font-size: 0.875rem;
 }
 
 .station-select {
     background: rgba(255, 255, 255, 0.05);
-    border: 1px solid var(--card-border);
+    border: 1px solid rgba(0, 212, 255, 0.2);
     color: var(--text-primary);
-    padding: 0.5rem 1rem;
-    border-radius: 6px;
+    padding: 0.5rem 2rem 0.5rem 0.75rem;
+    border-radius: 8px;
     font-size: 0.875rem;
-    min-width: 250px;
     cursor: pointer;
     transition: all 0.3s;
+    min-width: 200px;
+    max-width: 300px;
 }
 
 .station-select:hover {
-    background: rgba(255, 255, 255, 0.08);
     border-color: var(--primary-blue);
+    background: rgba(0, 212, 255, 0.1);
 }
 
 .station-select:focus {
     outline: none;
-    border-color: var(--primary-blue);
+    border-color: var(--accent-blue);
     box-shadow: 0 0 0 3px rgba(0, 212, 255, 0.1);
 }
 
-.station-select option {
-    background: var(--card-bg);
-    color: var(--text-primary);
-    padding: 0.5rem;
-}
-
-/* Date Filter Container */
+/* Date Filter */
 .date-filter-container {
     display: flex;
     align-items: center;
     gap: 0.5rem;
+    flex-shrink: 0;
 }
 
 .month-label {
@@ -187,34 +164,34 @@ body {
     margin: 0;
     display: flex;
     align-items: center;
-    gap: 0.25rem;
+    gap: 0.375rem;
+    white-space: nowrap;
 }
 
 .month-label i {
     color: var(--primary-blue);
+    font-size: 0.875rem;
 }
 
 .month-select {
     background: rgba(255, 255, 255, 0.05);
-    border: 1px solid var(--card-border);
+    border: 1px solid rgba(0, 212, 255, 0.2);
     color: var(--text-primary);
-    padding: 0.5rem 1rem;
-    border-radius: 6px;
+    padding: 0.5rem 0.75rem;
+    border-radius: 8px;
     font-size: 0.875rem;
-    min-width: 160px;
     cursor: pointer;
     transition: all 0.3s;
-    font-family: inherit;
 }
 
 .month-select:hover {
-    background: rgba(255, 255, 255, 0.08);
     border-color: var(--primary-blue);
+    background: rgba(0, 212, 255, 0.1);
 }
 
 .month-select:focus {
     outline: none;
-    border-color: var(--primary-blue);
+    border-color: var(--accent-blue);
     box-shadow: 0 0 0 3px rgba(0, 212, 255, 0.1);
 }
 
@@ -222,6 +199,144 @@ body {
 .month-select::-webkit-calendar-picker-indicator {
     filter: invert(1);
     cursor: pointer;
+}
+
+/* User Profile */
+.user-profile {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    flex-shrink: 0;
+}
+
+.settings-icon {
+    cursor: pointer;
+    color: var(--text-secondary);
+    font-size: 1.125rem;
+    transition: all 0.3s;
+    padding: 0.375rem;
+    border-radius: 6px;
+}
+
+.settings-icon:hover {
+    color: var(--primary-blue);
+    background: rgba(0, 212, 255, 0.1);
+}
+
+.user-avatar {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--accent-blue) 0%, #0099cc 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.3s;
+    box-shadow: 0 2px 8px rgba(0, 212, 255, 0.2);
+}
+
+.user-avatar i {
+    color: white;
+    font-size: 0.875rem;
+}
+
+.user-avatar:hover {
+    transform: scale(1.05);
+    box-shadow: 0 4px 12px rgba(0, 212, 255, 0.4);
+}
+
+.station-select option {
+    background: var(--card-bg);
+    color: var(--text-primary);
+    padding: 0.5rem;
+}
+
+/* Export Dropdown */
+.export-dropdown-container {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.btn-export {
+    background: linear-gradient(135deg, #00d4ff 0%, #0099cc 100%);
+    border: 1px solid var(--accent-blue);
+    color: var(--text-primary);
+    padding: 0.5rem 1rem;
+    border-radius: 6px;
+    font-size: 0.875rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    white-space: nowrap;
+}
+
+.btn-export:hover {
+    background: linear-gradient(135deg, #00bfe5 0%, #0088bb 100%);
+    border-color: #00bfe5;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 212, 255, 0.3);
+}
+
+.btn-export i {
+    font-size: 0.875rem;
+}
+
+/* Dropdown Menu Dark Theme */
+.dropdown-menu-dark {
+    background: var(--card-bg);
+    border: 1px solid rgba(0, 212, 255, 0.2);
+    border-radius: 8px;
+    padding: 0.5rem 0;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+    min-width: 220px;
+}
+
+.dropdown-header {
+    color: var(--accent-blue);
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    padding: 0.5rem 1rem;
+    margin-top: 0.25rem;
+}
+
+.dropdown-item {
+    color: var(--text-secondary);
+    padding: 0.5rem 1rem;
+    font-size: 0.875rem;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    cursor: pointer;
+}
+
+.dropdown-item:hover {
+    background: rgba(0, 212, 255, 0.1);
+    color: var(--text-primary);
+}
+
+.dropdown-item:active {
+    background: rgba(0, 212, 255, 0.2);
+    color: var(--accent-blue);
+}
+
+.dropdown-item i {
+    width: 16px;
+    text-align: center;
+    font-size: 0.875rem;
+    color: var(--accent-blue);
+}
+
+.dropdown-divider {
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+    margin: 0.5rem 0;
 }
 
 /* Main Container */
@@ -303,6 +418,36 @@ body {
 
 .change-negative {
     color: #ef4444;
+}
+
+/* Export Button */
+.btn-outline-primary {
+    background: transparent;
+    border: 1px solid var(--accent-blue);
+    color: var(--accent-blue);
+    padding: 0.375rem 0.75rem;
+    font-size: 0.875rem;
+    border-radius: 6px;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    cursor: pointer;
+}
+
+.btn-outline-primary:hover {
+    background: var(--accent-blue);
+    color: var(--text-primary);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 212, 255, 0.3);
+}
+
+.btn-outline-primary:active {
+    transform: translateY(0);
+}
+
+.btn-outline-primary i {
+    font-size: 0.875rem;
 }
 
 /* Chart Container */
@@ -466,8 +611,16 @@ body {
 }
 
 @media (max-width: 480px) {
+    
+    .top-navbar {
+        grid-template-columns: 1fr;
+        gap: 1rem;
+        padding: 0.75rem 1rem;
+    }
+    
     .brand {
         font-size: 1rem;
+        justify-content: center;
     }
     
     .brand-icon {
@@ -475,26 +628,59 @@ body {
         height: 28px;
     }
     
+    .nav-tabs-container {
+        justify-content: flex-start;
+        padding-bottom: 0.5rem;
+    }
+    
+    .nav-tabs-custom .nav-link {
+        padding: 0.375rem 0.75rem;
+        font-size: 0.8125rem;
+    }
+    
+    .nav-tabs-custom .nav-link i {
+        display: none; /* Hide icons on mobile */
+    }
+    
+    .station-selector-container,
+    .date-filter-container,
+    .export-dropdown-container {
+        width: 100%;
+    }
+    
+    .station-selector-container,
+    .date-filter-container {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0.375rem;
+    }
+    
+    .station-select,
+    .month-select {
+        width: 100%;
+        max-width: none;
+        min-width: unset;
+        font-size: 0.875rem;
+    }
+    
+    .station-label,
+    .month-label {
+        font-size: 0.8125rem;
+    }
+    
+    .btn-export {
+        width: 100%;
+        justify-content: center;
+    }
+    
+    .user-profile {
+        justify-content: center;
+        padding-top: 0.5rem;
+        border-top: 1px solid rgba(255, 255, 255, 0.1);
+    }
+    
     .user-avatar {
         width: 32px;
         height: 32px;
-    }
-    
-    .station-select {
-        min-width: unset;
-        font-size: 0.75rem;
-    }
-    
-    .station-label {
-        font-size: 0.75rem;
-    }
-    
-    .month-select {
-        min-width: unset;
-        font-size: 0.75rem;
-    }
-    
-    .month-label {
-        font-size: 0.75rem;
     }
 }
