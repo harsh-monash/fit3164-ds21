@@ -855,3 +855,76 @@ async def update_feedback_status(feedback_id: int, is_resolved: bool):
         feedback.updated_at = datetime.utcnow()
         session.commit()
         return {"message": "Feedback status updated"}
+
+
+# ============================================================================
+# Gemini AI Analysis Endpoints
+# ============================================================================
+
+from app.services.gemini_analysis_service import gemini_service
+
+class WeatherAnalysisRequest(BaseModel):
+    """Request model for weather analysis"""
+    metric: str  # 'temperature', 'wind', 'humidity'
+    data: dict  # Chart data
+    station_name: str
+    date_range: Optional[str] = None
+
+
+@router.post("/analysis/generate")
+async def generate_weather_analysis(request: WeatherAnalysisRequest, db: Session = Depends(get_db)):
+    """
+    Generate AI-powered weather analysis using Gemini API with database caching
+    
+    Args:
+        request: Analysis request with metric type and data
+        db: Database session for caching
+        
+    Returns:
+        Generated analysis text
+    """
+    try:
+        metric = request.metric.lower()
+        
+        if metric == 'temperature':
+            analysis = await gemini_service.generate_temperature_analysis(
+                data=request.data,
+                station_name=request.station_name,
+                date_range=request.date_range,
+                db=db
+            )
+        elif metric == 'wind':
+            analysis = await gemini_service.generate_wind_analysis(
+                data=request.data,
+                station_name=request.station_name,
+                date_range=request.date_range,
+                db=db
+            )
+        elif metric == 'humidity':
+            analysis = await gemini_service.generate_humidity_analysis(
+                data=request.data,
+                station_name=request.station_name,
+                date_range=request.date_range,
+                db=db
+            )
+        else:
+            raise HTTPException(status_code=400, detail=f"Invalid metric: {metric}")
+        
+        return {
+            "success": True,
+            "metric": metric,
+            "analysis": analysis,
+            "gemini_configured": gemini_service.is_configured()
+        }
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error generating analysis: {str(e)}")
+
+
+@router.get("/analysis/status")
+async def get_analysis_status():
+    """Check if Gemini API is configured and available"""
+    return {
+        "gemini_configured": gemini_service.is_configured(),
+        "api_available": gemini_service.is_configured()
+    }

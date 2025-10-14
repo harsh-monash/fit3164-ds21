@@ -314,22 +314,127 @@ function updateWeatherSummary(stations) {
     if (tempChange) tempChange.textContent = `-${tempVariance}%`;
     if (windChange) windChange.textContent = windVariance;
     if (humChange) humChange.textContent = humVariance;
+}
+
+// ============================================================================
+// AI-Powered Analysis Functions (Gemini Integration)
+// ============================================================================
+
+/**
+ * Generate AI-powered analysis for a specific metric
+ * @param {string} metric - The metric type ('temperature', 'wind', 'humidity')
+ * @param {object} data - The chart data
+ * @param {string} stationName - Name of the weather station
+ * @param {string} dateRange - Date range string (optional)
+ * @returns {Promise<string>} Generated analysis text
+ */
+async function generateAIAnalysis(metric, data, stationName, dateRange = null) {
+    try {
+        const response = await fetch('/api/analysis/generate', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                metric: metric,
+                data: data,
+                station_name: stationName,
+                date_range: dateRange
+            })
+        });
+        
+        if (!response.ok) {
+            throw new Error(`API error: ${response.status}`);
+        }
+        
+        const result = await response.json();
+        return result.analysis;
+    } catch (error) {
+        console.error(`Error generating ${metric} analysis:`, error);
+        return getFallbackAnalysis(metric, data);
+    }
+}
+
+/**
+ * Update analysis text for a specific metric with AI-generated content
+ * @param {string} elementId - ID of the analysis element
+ * @param {string} metric - The metric type
+ * @param {object} data - The chart data
+ * @param {string} stationName - Name of the station
+ * @param {string} dateRange - Date range string
+ */
+async function updateAnalysisWithAI(elementId, metric, data, stationName, dateRange) {
+    const analysisElement = document.getElementById(elementId);
+    if (!analysisElement) return;
     
-    const tempAnalysis = document.getElementById('temperatureAnalysis');
-    const windAnalysis = document.getElementById('windSpeedAnalysis');
-    const humAnalysis = document.getElementById('humidityAnalysis');
-    
-    if (tempAnalysis) {
-        tempAnalysis.textContent = `Average temperature across ${validStations.length} stations is ${avgTemp.toFixed(1)}C, with maximum reaching ${avgMaxTemp.toFixed(1)}C and minimum ${avgMinTemp.toFixed(1)}C. Temperature variance of ${tempVariance}% indicates ${tempVariance > 15 ? 'significant' : 'moderate'} daily fluctuations.`;
+    // Check if data is empty or invalid
+    if (!data || !hasValidData(data)) {
+        analysisElement.textContent = getNoDataMessage(metric);
+        return;
     }
     
-    if (windAnalysis) {
-        windAnalysis.textContent = `Wind activity index based on evapotranspiration data shows ${avgWind.toFixed(1)} units across monitored stations. Average evapotranspiration of ${avgET.toFixed(2)}mm suggests ${avgET > 4 ? 'high' : avgET > 2 ? 'moderate' : 'low'} wind and evaporative conditions.`;
+    // Show loading state
+    analysisElement.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Generating AI analysis...';
+    
+    try {
+        const analysis = await generateAIAnalysis(metric, data, stationName, dateRange);
+        analysisElement.textContent = analysis;
+    } catch (error) {
+        console.error(`Error updating ${metric} analysis:`, error);
+        analysisElement.textContent = getFallbackAnalysis(metric, data);
+    }
+}
+
+/**
+ * Check if data object has valid data points
+ * @param {object} data - The data object to check
+ * @returns {boolean} True if data has valid points
+ */
+function hasValidData(data) {
+    if (!data) return false;
+    
+    // Check for temperature data (has max_data and min_data)
+    if (data.max_data && Array.isArray(data.max_data) && data.max_data.length > 0) {
+        return true;
     }
     
-    if (humAnalysis) {
-        humAnalysis.textContent = `Estimated humidity levels at ${avgHumidity.toFixed(0)}% based on rainfall patterns. Average rainfall of ${avgRainfall.toFixed(2)}mm indicates ${avgRainfall > 3 ? 'humid' : avgRainfall > 1 ? 'moderately humid' : 'dry'} conditions across the monitoring network.`;
+    // Check for wind/humidity data (has data array)
+    if (data.data && Array.isArray(data.data) && data.data.length > 0) {
+        return true;
     }
+    
+    return false;
+}
+
+/**
+ * Get message to display when no data is available
+ * @param {string} metric - The metric type
+ * @returns {string} No data message
+ */
+function getNoDataMessage(metric) {
+    const messages = {
+        'temperature': 'No temperature data available for the selected period. Please select a different time range or station.',
+        'wind': 'No wind speed data available for the selected period. Please select a different time range or station.',
+        'humidity': 'No humidity data available for the selected period. Please select a different time range or station.'
+    };
+    return messages[metric] || 'No data available for analysis.';
+}
+
+/**
+ * Fallback analysis when AI generation fails
+ * @param {string} metric - The metric type
+ * @param {object} data - The chart data
+ * @returns {string} Fallback analysis text
+ */
+function getFallbackAnalysis(metric, data) {
+    if (metric === 'temperature') {
+        return 'Temperature data shows variations across the monitoring period. Analysis generation unavailable - please check API configuration.';
+    } else if (metric === 'wind') {
+        return 'Wind speed patterns recorded during the monitoring period. Analysis generation unavailable - please check API configuration.';
+    } else if (metric === 'humidity') {
+        return 'Humidity levels tracked across the selected time range. Analysis generation unavailable - please check API configuration.';
+    }
+    return 'Weather data analysis unavailable.';
 }
 
 function initializeCharts(realData = null) {
@@ -544,6 +649,65 @@ function initializeCharts(realData = null) {
                 }
             }
         });
+    }
+    
+    // ============================================================================
+    // Generate AI Analysis for all charts
+    // ============================================================================
+    if (hasTimeSeries && chartData.timeSeries.station) {
+        const stationName = chartData.timeSeries.station.station_name;
+        
+        // Temperature Analysis - check if data exists and has length
+        if (chartData.timeSeries.temperature && 
+            chartData.timeSeries.temperature.data && 
+            chartData.timeSeries.temperature.data.length > 0) {
+            const tempAnalysisData = {
+                max_data: chartData.timeSeries.temperature.data,
+                min_data: chartData.timeSeries.minTemperature ? chartData.timeSeries.minTemperature.data : []
+            };
+            updateAnalysisWithAI('temperatureAnalysis', 'temperature', tempAnalysisData, stationName, dateRange);
+        } else {
+            // No data available
+            const tempElement = document.getElementById('temperatureAnalysis');
+            if (tempElement) {
+                tempElement.textContent = 'No temperature data available for the selected period. Please select a different time range or station.';
+            }
+        }
+        
+        // Wind Analysis - check if data exists and has length
+        if (chartData.timeSeries.wind && 
+            chartData.timeSeries.wind.data && 
+            chartData.timeSeries.wind.data.length > 0) {
+            updateAnalysisWithAI('windSpeedAnalysis', 'wind', chartData.timeSeries.wind, stationName, dateRange);
+        } else {
+            // No data available
+            const windElement = document.getElementById('windSpeedAnalysis');
+            if (windElement) {
+                windElement.textContent = 'No wind speed data available for the selected period. Please select a different time range or station.';
+            }
+        }
+        
+        // Humidity Analysis - check if data exists and has length
+        if (chartData.timeSeries.humidity && 
+            chartData.timeSeries.humidity.data && 
+            chartData.timeSeries.humidity.data.length > 0) {
+            updateAnalysisWithAI('humidityAnalysis', 'humidity', chartData.timeSeries.humidity, stationName, dateRange);
+        } else {
+            // No data available
+            const humElement = document.getElementById('humidityAnalysis');
+            if (humElement) {
+                humElement.textContent = 'No humidity data available for the selected period. Please select a different time range or station.';
+            }
+        }
+    } else {
+        // No station selected or no time series data
+        const tempElement = document.getElementById('temperatureAnalysis');
+        const windElement = document.getElementById('windSpeedAnalysis');
+        const humElement = document.getElementById('humidityAnalysis');
+        
+        if (tempElement) tempElement.textContent = 'Select a weather station to view AI-generated temperature analysis.';
+        if (windElement) windElement.textContent = 'Select a weather station to view AI-generated wind speed analysis.';
+        if (humElement) humElement.textContent = 'Select a weather station to view AI-generated humidity analysis.';
     }
 }
 

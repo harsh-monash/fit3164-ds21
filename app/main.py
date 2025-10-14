@@ -10,7 +10,23 @@ from fastapi.responses import FileResponse
 import os
 from pathlib import Path
 from fastapi import FastAPI
-from app.auth import auth_routes 
+from app.auth import auth_routes
+
+# Load environment variables from .env file
+try:
+    from dotenv import load_dotenv
+    env_file = Path(__file__).parent.parent / '.env'
+    if env_file.exists():
+        load_dotenv(env_file)
+        print(f"✓ Loaded environment from: {env_file}")
+    else:
+        # Try config/.env
+        env_file = Path(__file__).parent.parent / 'config' / '.env'
+        if env_file.exists():
+            load_dotenv(env_file)
+            print(f"✓ Loaded environment from: {env_file}")
+except ImportError:
+    print("Note: python-dotenv not installed. Using system environment variables only.")
 
 app = FastAPI()
 

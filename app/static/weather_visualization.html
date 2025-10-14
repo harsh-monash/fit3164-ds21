@@ -128,8 +128,8 @@
                         <div class="card-header-row">
                             <div>
                                 <div class="card-title">Wind Speed Trends</div>
-                                <div class="card-value" id="windSpeedValue">15 km/h</div>
-                                <div class="card-change change-positive">Last 7 Days <span id="windSpeedChange">+5%</span></div>
+                                <!-- <div class="card-value" id="windSpeedValue">15 km/h</div>
+                                <div class="card-change change-positive">Last 7 Days <span id="windSpeedChange">+5%</span></div> -->
                             </div>
                             <button class="btn btn-sm btn-outline-primary" onclick="exportChart('windSpeed')" title="Export chart as PNG">
                                 <i class="fas fa-download"></i> Export
@@ -139,11 +139,12 @@
                             <canvas id="windSpeedChart"></canvas>
                         </div>
                         <div class="analysis-box">
-                            <div class="analysis-title">Analysis</div>
+                            <div class="analysis-title">Analysis </div>
                             <div class="analysis-text" id="windSpeedAnalysis">
-                                The wind speed has shown a slight increase over the past week, averaging around 15 km/h. 
-                                This trend suggests a moderately windy period, which could impact outdoor activities and 
-                                energy production from wind turbines.
+                                Select a weather station to view AI-generated wind speed analysis.
+                            </div>
+                            <div class="ai-disclaimer">
+                                <i class="fas fa-info-circle"></i> AI-generated analysis may not be fully accurate. Please verify critical information.
                             </div>
                         </div>
                     </div>
@@ -156,9 +157,9 @@
                     <div class="data-card">
                         <div class="card-header-row">
                             <div>
-                                <div class="card-title">Temperature Fluctuations</div>
-                                <div class="card-value" id="temperatureValue">22C</div>
-                                <div class="card-change change-negative">Last 7 Days <span id="temperatureChange">-2%</span></div>
+                                <div class="card-title">Temperature Changes(monthly)</div>
+                                <!-- <div class="card-value" id="temperatureValue">22C</div>
+                                <div class="card-change change-negative">Last 7 Days <span id="temperatureChange">-2%</span></div> -->
                             </div>
                             <button class="btn btn-sm btn-outline-primary" onclick="exportChart('temperature')" title="Export chart as PNG">
                                 <i class="fas fa-download"></i> Export
@@ -170,8 +171,10 @@
                         <div class="analysis-box">
                             <div class="analysis-title">Analysis</div>
                             <div class="analysis-text" id="temperatureAnalysis">
-                                Temperature has remained relatively stable, with an average of 22C. There was a slight 
-                                decrease of 2% over the last week, indicating a mild and consistent weather pattern.
+                                Select a weather station to view AI-generated temperature analysis.
+                            </div>
+                            <div class="ai-disclaimer">
+                                <i class="fas fa-info-circle"></i> AI-generated analysis may not be fully accurate. Please verify critical information.
                             </div>
                         </div>
                     </div>
@@ -184,9 +187,9 @@
                     <div class="data-card">
                         <div class="card-header-row">
                             <div>
-                                <div class="card-title">Humidity Levels</div>
-                                <div class="card-value" id="humidityValue">65%</div>
-                                <div class="card-change change-positive">Last 7 Days <span id="humidityChange">+3%</span></div>
+                                <div class="card-title">Humidity Levels Changes(monthly)</div>
+                                <!-- <div class="card-value" id="humidityValue">65%</div>
+                                <div class="card-change change-positive">Last 7 Days <span id="humidityChange">+3%</span></div> -->
                             </div>
                             <button class="btn btn-sm btn-outline-primary" onclick="exportChart('humidity')" title="Export chart as PNG">
                                 <i class="fas fa-download"></i> Export
@@ -198,8 +201,10 @@
                         <div class="analysis-box">
                             <div class="analysis-title">Analysis</div>
                             <div class="analysis-text" id="humidityAnalysis">
-                                Humidity levels have seen a minor increase, currently at 65%. This indicates a moderately 
-                                humid environment, which is typical for this season and location.
+                                Select a weather station to view AI-generated humidity analysis.
+                            </div>
+                            <div class="ai-disclaimer">
+                                <i class="fas fa-info-circle"></i> AI-generated analysis may not be fully accurate. Please verify critical information.
                             </div>
                         </div>
                     </div>
@@ -212,7 +217,7 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 
     <!-- Custom JavaScript with cache busting -->
-    <script src="/static/js/weather_visualization.js?v=3.0"></script>
+    <script src="/static/js/weather_visualization.js?v=3.1"></script>
 
 </body>
 </html>

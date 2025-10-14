@@ -136,3 +136,40 @@ class User(Base):
     password_hash = Column(String, nullable=False)
     otp_secret = Column(String, nullable=True)  
     is_verified = Column(Boolean, default=False) 
+
+
+class WeatherAnalysisCache(Base):
+    """Cache for AI-generated weather analyses"""
+    __tablename__ = 'weather_analysis_cache'
+    
+    id = Column(Integer, primary_key=True, index=True)
+    
+    # Query parameters (used to identify unique analyses)
+    station_name = Column(String(255), nullable=False, index=True)
+    metric_type = Column(String(50), nullable=False, index=True)  # 'temperature', 'wind', 'humidity'
+    start_date = Column(Date, nullable=False)
+    end_date = Column(Date, nullable=False)
+    
+    # Data fingerprint (hash of the actual data used for analysis)
+    data_hash = Column(String(64), nullable=False, index=True)  # SHA256 hash of data
+    
+    # Generated analysis
+    analysis_text = Column(Text, nullable=False)
+    
+    # Metadata
+    model_used = Column(String(100), default='gemini-1.5-flash')  # AI model version
+    generated_at = Column(DateTime, default=datetime.datetime.utcnow, nullable=False)
+    access_count = Column(Integer, default=0)  # Track how many times this was reused
+    last_accessed = Column(DateTime, default=datetime.datetime.utcnow, onupdate=datetime.datetime.utcnow)
+    
+    # Quality/status
+    is_valid = Column(Boolean, default=True)  # Can be invalidated if data changes
+    created_at = Column(DateTime, default=datetime.datetime.utcnow)
+    
+    # Composite unique index to prevent duplicate analyses
+    __table_args__ = (
+        {'extend_existing': True}
+    )
+    
+    def __repr__(self):
+        return f"<WeatherAnalysisCache(station='{self.station_name}', metric='{self.metric_type}', date={self.start_date}-{self.end_date})>"
