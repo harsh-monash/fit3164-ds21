@@ -1,86 +1,50 @@
 #!/usr/bin/env python3
 """
-Database initialization script
-Sets up PostGIS extension and creates initial schema
+Initialize the PostGIS database for the weather project.
 """
 
-import pg8000
 import os
-from app.database.connection import engine, Base
+import pg8000
+from dotenv import load_dotenv
 
-def setup_postgis():
-    """Set up PostGIS extension in the database"""
+def main():
+    # 1️⃣ Load .env from project root
+    load_dotenv(dotenv_path="config/.env")
+
+    # 2️⃣ Gather connection parameters
+    db_url = os.getenv("DATABASE_URL")
+    host = os.getenv("POSTGRES_HOST", "localhost")
+    port = int(os.getenv("POSTGRES_PORT", 5432))
+    user = os.getenv("POSTGRES_USER", "postgres")
+    password = os.getenv("POSTGRES_PASSWORD", "postgres")
+    database = os.getenv("POSTGRES_DB", "weatherdb")
+
+    print("🚀 Initializing Weather Database with PostGIS...")
+    print(f"Connecting to {host}:{port} as {user} -> {database}")
+
     try:
-        # Connection parameters
-        db_url = os.getenv("DATABASE_URL", "postgresql://postgres:password@localhost:5433/weatherdb")
-        
-        # Parse connection string
-        if db_url.startswith("postgresql://"):
-            # Remove postgresql:// prefix
-            connection_part = db_url[13:]
-            user_pass, host_db = connection_part.split("@")
-            user, password = user_pass.split(":")
-            host_port, database = host_db.split("/")
-            host, port = host_port.split(":")
-            
-            # Connect to database
-            conn = pg8000.connect(
-                host=host,
-                port=int(port),
-                database=database,
-                user=user,
-                password=password
-            )
-            
-            # Enable autocommit for extension creation
-            conn.autocommit = True
-            cursor = conn.cursor()
-            
-            # Create PostGIS extension
-            print("🗺️  Setting up PostGIS extension...")
-            cursor.execute("CREATE EXTENSION IF NOT EXISTS postgis;")
-            cursor.execute("CREATE EXTENSION IF NOT EXISTS postgis_topology;")
-            
-            # Verify PostGIS installation
-            cursor.execute("SELECT PostGIS_Version();")
-            version = cursor.fetchone()
-            if version:
-                print(f"✅ PostGIS version: {version[0]}")
-            
-            # Close connections
-            cursor.close()
-            conn.close()
-            
-            print("✅ PostGIS setup completed successfully!")
-            
+        # 3️⃣ Connect to Postgres
+        conn = pg8000.connect(
+            user=user,
+            password=password,
+            host=host,
+            port=port,
+            database=database
+        )
+        cur = conn.cursor()
+
+        # 4️⃣ Create PostGIS extensions if not present
+        cur.execute("CREATE EXTENSION IF NOT EXISTS postgis;")
+        cur.execute("CREATE EXTENSION IF NOT EXISTS postgis_topology;")
+        conn.commit()
+
+        print("✅ PostGIS setup successful.")
+        cur.close()
+        conn.close()
+
     except Exception as e:
         print(f"❌ PostGIS setup failed: {e}")
         raise
-
-def create_tables():
-    """Create all database tables"""
-    try:
-        print("📋 Creating database tables...")
-        
-        # Create all tables
-        Base.metadata.create_all(bind=engine)
-        print("✅ Database tables created successfully!")
-        
-    except Exception as e:
-        print(f"❌ Table creation failed: {e}")
-        raise
-
-def main():
-    """Main initialization function"""
-    print("🚀 Initializing Weather Database with PostGIS...")
-    
-    # Step 1: Set up PostGIS extension
-    setup_postgis()
-    
-    # Step 2: Create tables
-    create_tables()
-    
-    print("🎉 Database initialization completed!")
 
 if __name__ == "__main__":
     main()
