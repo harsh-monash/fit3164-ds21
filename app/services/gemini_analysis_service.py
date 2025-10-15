@@ -9,9 +9,64 @@ import google.generativeai as genai
 from typing import Dict, Any, Optional
 from datetime import datetime, date
 import json
+import time
+import threading
 from sqlalchemy.orm import Session
 from sqlalchemy import and_
 from app.cache.redis_client import get_redis, get_ttl_for_metric
+
+
+class RateLimiter:
+    """Token bucket rate limiter for API calls"""
+    
+    def __init__(self, max_requests: int = 10, time_window: float = 1.0):
+        """
+        Initialize rate limiter
+        
+        Args:
+            max_requests: Maximum requests allowed in time window
+            time_window: Time window in seconds
+        """
+        self.max_requests = max_requests
+        self.time_window = time_window
+        self.tokens = max_requests
+        self.last_update = time.time()
+        self.lock = threading.Lock()
+    
+    def acquire(self, timeout: float = 30.0) -> bool:
+        """
+        Acquire a token to make a request
+        
+        Args:
+            timeout: Maximum time to wait for a token (seconds)
+            
+        Returns:
+            True if token acquired, False if timeout
+        """
+        start_time = time.time()
+        
+        while True:
+            with self.lock:
+                now = time.time()
+                # Refill tokens based on elapsed time
+                elapsed = now - self.last_update
+                self.tokens = min(
+                    self.max_requests,
+                    self.tokens + (elapsed / self.time_window) * self.max_requests
+                )
+                self.last_update = now
+                
+                # Try to consume a token
+                if self.tokens >= 1.0:
+                    self.tokens -= 1.0
+                    return True
+            
+            # Check timeout
+            if time.time() - start_time >= timeout:
+                return False
+            
+            # Wait a bit before retrying
+            time.sleep(0.05)
 
 
 class GeminiAnalysisService:
@@ -33,14 +88,51 @@ class GeminiAnalysisService:
         # Initialize Redis client
         self.redis = get_redis()
         self.use_redis = self.redis is not None
+        
+        # Initialize rate limiter (10 requests per second by default)
+        # Adjust based on your Gemini API tier limits
+        rate_limit = int(os.getenv('GEMINI_RATE_LIMIT', '10'))
+        self.rate_limiter = RateLimiter(max_requests=rate_limit, time_window=1.0)
+        
+        # Cache statistics (in-memory tracking)
+        self.stats = {
+            'redis_hits': 0,
+            'redis_misses': 0,
+            'db_hits': 0,
+            'db_misses': 0,
+            'generations': 0
+        }
     
     def is_configured(self) -> bool:
         """Check if Gemini API is properly configured"""
         return self.api_key is not None and self.model is not None
     
+    def get_cache_stats(self) -> Dict[str, Any]:
+        """Get cache performance statistics"""
+        total_requests = self.stats['redis_hits'] + self.stats['redis_misses']
+        redis_hit_rate = (self.stats['redis_hits'] / total_requests * 100) if total_requests > 0 else 0
+        
+        total_db_requests = self.stats['db_hits'] + self.stats['db_misses']
+        db_hit_rate = (self.stats['db_hits'] / total_db_requests * 100) if total_db_requests > 0 else 0
+        
+        return {
+            'redis': {
+                'hits': self.stats['redis_hits'],
+                'misses': self.stats['redis_misses'],
+                'hit_rate': f"{redis_hit_rate:.1f}%"
+            },
+            'database': {
+                'hits': self.stats['db_hits'],
+                'misses': self.stats['db_misses'],
+                'hit_rate': f"{db_hit_rate:.1f}%"
+            },
+            'generations': self.stats['generations'],
+            'total_requests': total_requests
+        }
+    
     def _generate_data_hash(self, data: Dict[str, Any]) -> str:
         """
-        Generate a hash of the data to identify unique datasets
+        Generate a deterministic hash of the data to identify unique datasets
         
         Args:
             data: The weather data dictionary
@@ -48,9 +140,54 @@ class GeminiAnalysisService:
         Returns:
             SHA256 hash of the data
         """
-        # Create a stable string representation of the data
-        data_str = json.dumps(data, sort_keys=True)
-        return hashlib.sha256(data_str.encode()).hexdigest()
+        # Normalize the data structure to ensure consistency
+        # Extract only the essential data values, ignoring metadata like labels, colors, etc.
+        normalized_data = {}
+        
+        # For temperature data
+        if 'max_data' in data or 'min_data' in data:
+            max_values = []
+            min_values = []
+            dates = []
+            
+            if 'max_data' in data and isinstance(data['max_data'], list):
+                for item in data['max_data']:
+                    if isinstance(item, dict):
+                        max_values.append(item.get('value'))
+                        dates.append(item.get('date'))
+                    
+            if 'min_data' in data and isinstance(data['min_data'], list):
+                for item in data['min_data']:
+                    if isinstance(item, dict):
+                        min_values.append(item.get('value'))
+                        
+            normalized_data = {
+                'max_values': sorted([v for v in max_values if v is not None]),
+                'min_values': sorted([v for v in min_values if v is not None]),
+                'dates': sorted([d for d in dates if d is not None])
+            }
+        
+        # For wind/humidity data (simpler structure)
+        elif 'values' in data:
+            values = data.get('values', [])
+            timestamps = data.get('timestamps', [])
+            normalized_data = {
+                'values': sorted([v for v in values if v is not None]),
+                'timestamps': sorted([t for t in timestamps if t is not None])
+            }
+        
+        # For other data structures, use the full data
+        else:
+            normalized_data = data
+        
+        # Create a stable string representation
+        data_str = json.dumps(normalized_data, sort_keys=True)
+        hash_value = hashlib.sha256(data_str.encode()).hexdigest()
+        
+        # Debug logging (can be removed in production)
+        print(f"🔍 Data hash: {hash_value[:12]} for normalized: {str(normalized_data)[:100]}...")
+        
+        return hash_value
     
     def _build_cache_key(self, station_name: str, metric: str, data_hash: str) -> str:
         """
@@ -70,7 +207,7 @@ class GeminiAnalysisService:
     
     def _get_from_redis(self, cache_key: str) -> Optional[str]:
         """
-        Get analysis from Redis (L1 cache)
+        Get analysis from Redis (L1 cache) with optimized performance
         
         Args:
             cache_key: Redis key
@@ -82,12 +219,20 @@ class GeminiAnalysisService:
             return None
         
         try:
-            cached = self.redis.get(cache_key)
+            # Use pipeline for atomic operations (faster than individual commands)
+            pipe = self.redis.pipeline()
+            pipe.get(cache_key)
+            pipe.incr(f"{cache_key}:hits")
+            results = pipe.execute()
+            
+            cached = results[0]
             if cached:
-                # Increment hit counter
-                self.redis.incr(f"{cache_key}:hits")
-                print(f"✓ Redis L1 cache hit: {cache_key}")
+                self.stats['redis_hits'] += 1
+                print(f"✓ Redis L1 cache HIT: {cache_key} (hits: {results[1]})")
                 return cached
+            else:
+                self.stats['redis_misses'] += 1
+                print(f"⚠️  Redis L1 cache MISS: {cache_key}")
             return None
         except Exception as e:
             print(f"⚠️  Redis get error: {str(e)}")
@@ -166,13 +311,15 @@ class GeminiAnalysisService:
                 cached.last_accessed = datetime.utcnow()
                 db.commit()
                 
-                print(f"✓ Database L2 cache hit for {station_name} - {metric} (accessed {cached.access_count} times)")
+                self.stats['db_hits'] += 1
+                print(f"✓ Database L2 cache HIT for {station_name} - {metric} (accessed {cached.access_count} times)")
                 
                 # Populate Redis cache for future fast access
                 self._save_to_redis(cache_key, cached.analysis_text, metric)
                 
                 return cached.analysis_text
             
+            self.stats['db_misses'] += 1
             return None
             
         except Exception as e:
@@ -308,6 +455,13 @@ Provide a concise, 2-3 sentence analysis focusing on:
 
 Keep the tone professional but accessible. Do not use markdown formatting."""
 
+            # Apply rate limiting before API call
+            if not self.rate_limiter.acquire(timeout=30.0):
+                raise Exception("Rate limit timeout: Could not acquire token for Gemini API call")
+            
+            # Track generation for statistics
+            self.stats['generations'] += 1
+            
             response = self.model.generate_content(prompt)
             analysis = response.text.strip()
             
@@ -386,6 +540,13 @@ Provide a concise, 2-3 sentence analysis focusing on:
 
 Keep the tone professional but accessible. Do not use markdown formatting."""
 
+            # Apply rate limiting before API call (for wind analysis)
+            if not self.rate_limiter.acquire(timeout=30.0):
+                raise Exception("Rate limit timeout: Could not acquire token for Gemini API call")
+            
+            # Track generation for statistics
+            self.stats['generations'] += 1
+            
             response = self.model.generate_content(prompt)
             analysis = response.text.strip()
             
@@ -464,6 +625,13 @@ Provide a concise, 2-3 sentence analysis focusing on:
 
 Keep the tone professional but accessible. Do not use markdown formatting."""
 
+            # Apply rate limiting before API call (for humidity analysis)
+            if not self.rate_limiter.acquire(timeout=30.0):
+                raise Exception("Rate limit timeout: Could not acquire token for Gemini API call")
+            
+            # Track generation for statistics
+            self.stats['generations'] += 1
+            
             response = self.model.generate_content(prompt)
             analysis = response.text.strip()
             

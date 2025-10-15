@@ -928,3 +928,14 @@ async def get_analysis_status():
         "gemini_configured": gemini_service.is_configured(),
         "api_available": gemini_service.is_configured()
     }
+
+
+@router.get("/analysis/stats")
+async def get_analysis_statistics():
+    """Get cache performance statistics for monitoring and optimization"""
+    stats = gemini_service.get_cache_stats()
+    return {
+        "success": True,
+        "statistics": stats,
+        "note": "Statistics reset on server restart"
+    }
