@@ -673,11 +673,10 @@ async function selectLocation(lat, lon, name) {
 		// Try to get nearby weather stations
 		const nearbyResponse = await fetch(`${API_BASE}/weather/nearby?lat=${lat}&lng=${lon}&radius_km=50`);
 		
+		// Start with just the coordinates, no duplicate location name
 		let resultHtml = `
-			<div class="row mb-3">
-				<div class="col-12">
-					<p class="mb-1"><strong>Coordinates:</strong> ${lat.toFixed(4)}, ${lon.toFixed(4)}</p>
-				</div>
+			<div class="mb-3">
+				<p class="mb-0 text-muted"><i class="fas fa-map-marker-alt"></i> <strong>Coordinates:</strong> ${lat.toFixed(4)}, ${lon.toFixed(4)}</p>
 			</div>
 		`;
 		

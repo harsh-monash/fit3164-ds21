@@ -1,6 +1,6 @@
 """
 Gemini AI Analysis Service
-Generates weather insights using Google's Gemini API with database caching
+Generates weather insights using Google's Gemini API with L1 (Redis) + L2 (Database) caching
 """
 
 import os
@@ -11,23 +11,28 @@ from datetime import datetime, date
 import json
 from sqlalchemy.orm import Session
 from sqlalchemy import and_
+from app.cache.redis_client import get_redis, get_ttl_for_metric
 
 
 class GeminiAnalysisService:
-    """Service for generating weather analysis using Gemini API with caching"""
+    """Service for generating weather analysis using Gemini API with L1/L2 caching"""
     
     def __init__(self):
         """Initialize Gemini service with API key from environment"""
         self.api_key = os.getenv('GEMINI_API_KEY')
         if self.api_key:
             genai.configure(api_key=self.api_key)
-            # Using gemini-1.5-flash for faster, cost-effective responses
+            # Using gemini-2.5-flash-lite for faster, cost-effective responses
             # Alternative models: 'gemini-pro', 'gemini-1.5-pro', 'gemini-2.0-flash-exp'
             self.model = genai.GenerativeModel('gemini-2.5-flash-lite')
             self.model_name = 'gemini-2.5-flash-lite'
         else:
             self.model = None
             self.model_name = None
+        
+        # Initialize Redis client
+        self.redis = get_redis()
+        self.use_redis = self.redis is not None
     
     def is_configured(self) -> bool:
         """Check if Gemini API is properly configured"""
@@ -47,6 +52,71 @@ class GeminiAnalysisService:
         data_str = json.dumps(data, sort_keys=True)
         return hashlib.sha256(data_str.encode()).hexdigest()
     
+    def _build_cache_key(self, station_name: str, metric: str, data_hash: str) -> str:
+        """
+        Build Redis cache key
+        
+        Args:
+            station_name: Name of weather station
+            metric: Metric type
+            data_hash: SHA256 hash of data
+            
+        Returns:
+            Cache key string
+        """
+        # Format: ai:analysis:{station}:{metric}:{hash_prefix}
+        hash_prefix = data_hash[:12]  # Use first 12 chars for readability
+        return f"ai:analysis:{station_name}:{metric}:{hash_prefix}"
+    
+    def _get_from_redis(self, cache_key: str) -> Optional[str]:
+        """
+        Get analysis from Redis (L1 cache)
+        
+        Args:
+            cache_key: Redis key
+            
+        Returns:
+            Cached analysis or None
+        """
+        if not self.use_redis:
+            return None
+        
+        try:
+            cached = self.redis.get(cache_key)
+            if cached:
+                # Increment hit counter
+                self.redis.incr(f"{cache_key}:hits")
+                print(f"✓ Redis L1 cache hit: {cache_key}")
+                return cached
+            return None
+        except Exception as e:
+            print(f"⚠️  Redis get error: {str(e)}")
+            return None
+    
+    def _save_to_redis(self, cache_key: str, analysis: str, metric: str) -> bool:
+        """
+        Save analysis to Redis (L1 cache) with TTL
+        
+        Args:
+            cache_key: Redis key
+            analysis: Analysis text
+            metric: Metric type for TTL selection
+            
+        Returns:
+            True if saved successfully
+        """
+        if not self.use_redis:
+            return False
+        
+        try:
+            ttl = get_ttl_for_metric(metric)
+            self.redis.setex(cache_key, ttl, analysis)
+            print(f"✓ Saved to Redis L1 cache (TTL={ttl}s): {cache_key}")
+            return True
+        except Exception as e:
+            print(f"⚠️  Redis save error: {str(e)}")
+            return False
+    
     def _get_cached_analysis(
         self,
         db: Session,
@@ -57,7 +127,7 @@ class GeminiAnalysisService:
         data_hash: str
     ) -> Optional[str]:
         """
-        Retrieve cached analysis from database
+        Retrieve cached analysis from L1 (Redis) then L2 (Database)
         
         Args:
             db: Database session
@@ -70,6 +140,13 @@ class GeminiAnalysisService:
         Returns:
             Cached analysis text or None if not found
         """
+        # L1: Check Redis cache first (fast)
+        cache_key = self._build_cache_key(station_name, metric, data_hash)
+        redis_result = self._get_from_redis(cache_key)
+        if redis_result:
+            return redis_result
+        
+        # L2: Check database cache (slower but durable)
         try:
             from app.database.models import WeatherAnalysisCache
             
@@ -89,13 +166,17 @@ class GeminiAnalysisService:
                 cached.last_accessed = datetime.utcnow()
                 db.commit()
                 
-                print(f"✓ Cache hit for {station_name} - {metric} (accessed {cached.access_count} times)")
+                print(f"✓ Database L2 cache hit for {station_name} - {metric} (accessed {cached.access_count} times)")
+                
+                # Populate Redis cache for future fast access
+                self._save_to_redis(cache_key, cached.analysis_text, metric)
+                
                 return cached.analysis_text
             
             return None
             
         except Exception as e:
-            print(f"Error retrieving cached analysis: {str(e)}")
+            print(f"Error retrieving cached analysis from DB: {str(e)}")
             return None
     
     def _save_to_cache(
@@ -109,7 +190,7 @@ class GeminiAnalysisService:
         analysis: str
     ) -> bool:
         """
-        Save generated analysis to database cache
+        Save generated analysis to both L1 (Redis) and L2 (Database) cache
         
         Args:
             db: Database session
@@ -121,8 +202,16 @@ class GeminiAnalysisService:
             analysis: Generated analysis text
             
         Returns:
-            True if saved successfully, False otherwise
+            True if saved successfully to at least one cache
         """
+        success = False
+        
+        # Save to Redis (L1) with TTL
+        cache_key = self._build_cache_key(station_name, metric, data_hash)
+        if self._save_to_redis(cache_key, analysis, metric):
+            success = True
+        
+        # Save to Database (L2) for durability and analytics
         try:
             from app.database.models import WeatherAnalysisCache
             
@@ -144,13 +233,14 @@ class GeminiAnalysisService:
             db.add(cache_entry)
             db.commit()
             
-            print(f"✓ Cached new analysis for {station_name} - {metric}")
-            return True
+            print(f"✓ Saved to Database L2 cache for {station_name} - {metric}")
+            success = True
             
         except Exception as e:
-            print(f"Error saving to cache: {str(e)}")
+            print(f"Error saving to database cache: {str(e)}")
             db.rollback()
-            return False
+        
+        return success
     
     async def generate_temperature_analysis(
         self, 

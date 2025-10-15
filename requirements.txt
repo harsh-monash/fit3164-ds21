@@ -30,3 +30,6 @@ pyotp==2.9.0
 
 # AI/LLM Integration
 google-generativeai==0.3.2
+
+# Caching
+redis==4.6.0
